@@ -1,4 +1,4 @@
-# swat_skill v1.0.0 - PostgreSQL Database CLI Agent
+# swat_skill v1.0.1 - PostgreSQL Database CLI Agent
 
 <p align="center">
   <pre align="center">

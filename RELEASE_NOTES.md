@@ -1,5 +1,30 @@
 # Release Notes
 
+## v1.0.1 (2026-05-06)
+
+🔧 **Bug 修复与样式更新**
+
+swat_skill v1.0.1 是一个维护版本，修复了若干问题并更新了项目样式。
+
+### 🐛 修复内容
+
+- **Banner 更新**：启动 Banner 更新为正确的 SWAT SKILL ASCII 艺术字（使用 bulbhead 字体，字母内部白色填充）
+- **文档清理**：移除 DESIGN.md 中不必要的 OpenDB 引用，仅在 README.md 致谢部分保留
+- **导入修复**：修复多个技能文件中缺少 `Formatter` 导入的问题
+
+### 📝 文档更新
+
+- README.md Banner 更新
+- RELEASE_NOTES.md 添加版本历史记录
+- 项目版本号统一为 1.0.1
+
+### 🔧 技术改进
+
+- 使用 raw string 处理 Banner 中的转义字符
+- 统一 pyproject.toml 和 __init__.py 中的版本号
+
+---
+
 ## v1.0.0 (2026-05-06)
 
 🎉 **首个正式版本发布！**
@@ -91,4 +116,5 @@ pip install -e .
 
 | Version | Date | Description |
 |---------|------|-------------|
+| v1.0.1 | 2026-05-06 | Bug 修复与样式更新 |
 | v1.0.0 | 2026-05-06 | 首个正式版本 |
