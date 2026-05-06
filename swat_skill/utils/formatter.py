@@ -26,6 +26,26 @@ class HealthItem:
     tip: Optional[str] = None
 
 
+# SWAT SKILL banner using # characters (filled letters)
+SWAT_SKILL_BANNER = """
+  #####  #     #    #    #######        #####  #    # ### #       #
+ #     # #  #  #   # #      #          #     # #   #   #  #       #
+ #       #  #  #  #   #     #          #       #  #    #  #       #
+  #####  #  #  # #     #    #    #####  #####  ###     #  #       #
+       # #  #  # #######    #                # #  #    #  #       #
+ #     # #  #  # #     #    #          #     # #   #   #  #       #
+  #####   ## ##  #     #    #           #####  #    # ### ####### #######
+
+  #####  #    #  #######        #####  #    # ### #       #
+ #     # #   #   #             #     # #   #   #  #       #
+ #       #  #    #             #       #  #    #  #       #
+  #####  ###     #      #####  #####  ###     #  #       #
+       # #  #    #                   # #  #    #  #       #
+ #     # #   #   #             #     # #   #   #  #       #
+  #####  #    #  #######        #####  #    # ### ####### #######
+"""
+
+
 class Formatter:
     """Output formatter for swat_skill CLI."""
 
@@ -193,19 +213,10 @@ class Formatter:
         self.console.print(f"[dim]{len(rows)} rows, {execution_time:.3f}s[/dim]")
 
     def print_welcome(self) -> None:
-        """Print welcome message."""
-        banner = """
- ______        ___  _____    ____  _  _____ _     _
-/ ___\\ \\      / / \\|_   _|  / ___|| |/ /_ _| |   | |
-\\___ \\ \\ /\\ / / _ \\ | |____\\___ \\| ' / | || |   | |
- ___) |\\ V  V / ___ \\| |_____|__) | . \\ | || |___| |___
-|____/  \\_/\\_/_/   \\_\\_|    |____/|_|\\_\\___|_____|_____|
-
-
-PostgreSQL Database CLI Agent
-Type /help for available commands
-"""
-        self.console.print(Panel(banner, border_style="cyan"))
+        """Print welcome message with SWAT SKILL banner."""
+        self.console.print(Panel(SWAT_SKILL_BANNER, border_style="cyan"))
+        self.console.print("[bold]PostgreSQL Database CLI Agent[/bold]")
+        self.console.print("[dim]Type /help for available commands[/dim]")
 
     def clear(self) -> None:
         """Clear console."""
