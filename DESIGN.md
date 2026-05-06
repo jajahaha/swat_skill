@@ -4,7 +4,7 @@
 
 ### 1.1 背景
 
-swat_skill 是一个 PostgreSQL 数据库智能诊断 CLI Agent，设计参考了 Claude Code 的交互方式和 OpenDB 的功能理念。目标是让 DBA 和开发人员能够通过最简洁的交互方式，实现最优的数据库管理和诊断。
+swat_skill 是一个 PostgreSQL 数据库智能诊断 CLI Agent，设计参考了 Claude Code 的交互方式。目标是让 DBA 和开发人员能够通过最简洁的交互方式，实现最优的数据库管理和诊断。
 
 ### 1.2 设计目标
 
