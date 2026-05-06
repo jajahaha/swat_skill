@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swat_skill"
+version = "0.1.0"
+description = "PostgreSQL Database CLI Agent - Inspired by Claude Code"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+authors = [
+    {name = "swat_skill"}
+]
+keywords = ["postgresql", "database", "cli", "agent", "diagnostics"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Database Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+]
+
+dependencies = [
+    "psycopg[binary]>=3.1.0",
+    "prompt_toolkit>=3.0.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+    "anthropic>=0.18.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+swat_skill = "swat_skill.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/swat_skill/swat_skill"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["swat_skill*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

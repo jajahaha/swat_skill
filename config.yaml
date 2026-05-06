@@ -1,0 +1,20 @@
+# Default configuration for swat_skill
+
+database:
+  host: localhost
+  port: 5432
+  database: postgres
+  user: postgres
+  password: ""
+  ssl_mode: prefer  # disable | allow | prefer | require | verify-ca | verify-full
+
+llm:
+  provider: anthropic  # anthropic | openai
+  model: claude-sonnet-4-6
+  # api_key: ""  # Recommended: use environment variable ANTHROPIC_API_KEY or OPENAI_API_KEY
+  max_tokens: 4096
+  max_turns: 20
+
+display:
+  theme: dark
+  table_style: rounded  # plain | simple | rounded | double
