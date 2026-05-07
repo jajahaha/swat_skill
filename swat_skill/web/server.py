@@ -13,7 +13,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..config import Config, load_config
-from ..utils.formatter import SWAT_SKILL_BANNER
 from .websocket import session_manager, handle_websocket, handle_command_http
 from .adapter import WebFormatter
 
@@ -22,7 +21,7 @@ from .adapter import WebFormatter
 app = FastAPI(
     title="swat_skill Web",
     description="PostgreSQL Database CLI Agent - Web Interface",
-    version="1.2.0",
+    version="1.3.0",
 )
 
 # CORS middleware for development
@@ -48,176 +47,724 @@ if STATIC_DIR.exists():
 # HTML template for terminal interface
 TERMINAL_HTML = """
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>swat_skill Web Terminal</title>
+    <title>SWAT SKILL - PostgreSQL 智能诊断</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-card: #1c2128;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-green: #3fb950;
+            --accent-blue: #58a6ff;
+            --accent-yellow: #d29922;
+            --accent-red: #f85149;
+            --accent-purple: #a371f7;
+            --accent-orange: #db6d28;
+            --gradient-start: #238636;
+            --gradient-end: #3fb950;
+        }
+
         * {
             box-sizing: border-box;
-        }
-        body {
-            background: #1a1a2e;
-            color: #eee;
-            font-family: 'Courier New', Courier, monospace;
             margin: 0;
             padding: 0;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            line-height: 1.6;
         }
-        .banner {
-            color: #00ff88;
-            font-size: 14px;
-            margin-bottom: 20px;
-            white-space: pre;
-        }
-        .output-container {
-            background: #16213e;
-            border-radius: 8px;
-            padding: 15px;
-            min-height: 60vh;
-            max-height: 70vh;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-        .output-line {
-            margin: 5px 0;
-            line-height: 1.4;
-            white-space: pre-wrap;
-        }
-        .output-line.command {
-            color: #fff;
-        }
-        .output-line.error {
-            color: #ff4444;
-        }
-        .output-line.success {
-            color: #00ff88;
-        }
-        .output-line.info {
-            color: #4da6ff;
-        }
-        .prompt {
-            color: #00ff88;
-            font-weight: bold;
-        }
-        .input-container {
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
             display: flex;
             align-items: center;
-            background: #16213e;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-green);
+            letter-spacing: 1px;
+        }
+
+        .logo-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-left: 8px;
+        }
+
+        .connection-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .connection-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-yellow);
+            animation: pulse 2s infinite;
+        }
+
+        .connection-badge.connected::before {
+            background: var(--accent-green);
+        }
+
+        .connection-badge.error::before {
+            background: var(--accent-red);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .快捷键提示 {
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 4px 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .kbd {
+            background: var(--bg-primary);
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid var(--border-color);
+            font-size: 10px;
+        }
+
+        /* Main Container */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 16px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-item {
+            padding: 8px 12px;
+            margin-bottom: 2px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .skill-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .skill-item.active {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+        }
+
+        .skill-icon {
+            width: 16px;
+            text-align: center;
+        }
+
+        .skill-category {
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 8px 12px;
+            margin-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Terminal Area */
+        .terminal-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Output Container */
+        .output-container {
+            flex: 1;
+            background: var(--bg-primary);
+            padding: 20px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+        }
+
+        .output-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output-container::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .output-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .output-container::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Banner */
+        .banner-container {
+            background: linear-gradient(135deg, rgba(63, 185, 80, 0.1) 0%, rgba(88, 166, 255, 0.1) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .banner-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--accent-green);
+            text-shadow: 0 0 20px rgba(63, 185, 80, 0.3);
+            margin-bottom: 8px;
+        }
+
+        .banner-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+
+        .banner-version {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-purple);
+            margin-top: 8px;
+        }
+
+        .banner-ascii {
+            color: var(--accent-green);
+            font-size: 10px;
+            line-height: 1.2;
+            white-space: pre;
+            opacity: 0.6;
+            margin-top: 16px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Output Elements */
+        .output-line {
+            margin: 8px 0;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .output-line.command {
+            color: var(--text-primary);
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .output-line.error {
+            color: var(--accent-red);
+            background: rgba(248, 81, 73, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-red);
+        }
+
+        .output-line.success {
+            color: var(--accent-green);
+        }
+
+        .output-line.info {
+            color: var(--accent-blue);
+        }
+
+        .output-line.warning {
+            color: var(--accent-yellow);
+        }
+
+        .prompt {
+            color: var(--accent-green);
+            font-weight: 600;
+            user-select: none;
+        }
+
+        /* Separator */
+        .separator {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+            margin: 20px 0;
+        }
+
+        /* Result Block */
+        .result-block {
+            margin: 16px 0;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Table Styling */
+        .result-table-wrapper {
             border-radius: 8px;
-            padding: 10px 15px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
         }
-        .input-container .prompt {
-            margin-right: 10px;
-        }
-        #command-input {
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-family: inherit;
-            font-size: inherit;
-            width: 100%;
-            outline: none;
-        }
-        /* Table styling */
+
         .result-table {
             border-collapse: collapse;
             width: 100%;
-            margin: 10px 0;
+            font-size: 13px;
         }
+
         .result-table th {
-            background: #0f3460;
-            color: #00ff88;
-            padding: 8px;
-            border: 1px solid #1a1a2e;
+            background: var(--bg-tertiary);
+            color: var(--accent-green);
+            padding: 12px 16px;
             text-align: left;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
         }
+
         .result-table td {
-            padding: 8px;
-            border: 1px solid #1a1a2e;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
         }
+
+        .result-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .result-table tr:hover td {
+            background: var(--bg-secondary);
+        }
+
         .result-table tr:nth-child(even) td {
-            background: #1a1a2e;
+            background: rgba(22, 27, 34, 0.5);
         }
-        /* Health report styling */
+
+        .row-count {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-radius: 0 0 8px 8px;
+        }
+
+        .execution-time {
+            color: var(--accent-purple);
+        }
+
+        /* Health Report */
         .health-container {
-            margin: 10px 0;
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
         }
+
+        .health-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .health-overall {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .health-status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .health-status-badge.ok {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--accent-green);
+        }
+
+        .health-status-badge.warning {
+            background: rgba(210, 153, 34, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        .health-status-badge.critical {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--accent-red);
+        }
+
         .health-category {
-            font-weight: bold;
-            color: #4da6ff;
-            margin: 10px 0 5px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin: 16px 0 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+
+        .health-items {
+            display: grid;
+            gap: 6px;
+        }
+
         .health-item {
-            margin: 3px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
         }
-        .status-ok { color: #00ff88; }
-        .status-warning { color: #ffcc00; }
-        .status-critical { color: #ff4444; }
-        .dim { color: #888; font-size: 12px; margin-bottom: 10px; }
-        .separator {
-            border-bottom: 1px solid #2a2a4e;
-            margin: 15px 0;
+
+        .health-item-name {
+            flex: 1;
+            color: var(--text-primary);
         }
-        .result-block {
-            margin-bottom: 15px;
+
+        .health-item-value {
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
         }
-        .connection-status {
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
+
+        .health-item-tip {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
         }
-        .connection-status.connected {
-            background: #0f3460;
-            color: #00ff88;
+
+        /* Status Icons */
+        .status-icon {
+            width: 20px;
+            text-align: center;
+            font-weight: 600;
         }
-        .connection-status.error {
-            background: #2f1f1f;
-            color: #ff4444;
+
+        .status-ok { color: var(--accent-green); }
+        .status-warning { color: var(--accent-yellow); }
+        .status-critical { color: var(--accent-red); }
+
+        /* Input Container */
+        .input-container {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            transition: all 0.15s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px rgba(63, 185, 80, 0.1);
+        }
+
+        .input-prompt {
+            color: var(--accent-green);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            margin-right: 12px;
+            user-select: none;
+        }
+
+        #command-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #command-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            border-color: var(--accent-green);
+        }
+
+        /* Autocomplete Dropdown */
+        .autocomplete-list {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            padding: 8px;
+            display: none;
+        }
+
+        .autocomplete-list.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .autocomplete-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .header-right {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="banner">{banner}</div>
-
-        <div id="connection-status" class="connection-status">
-            Connecting...
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">SWAT SKILL</div>
+            <span class="logo-sub">PostgreSQL 智能诊断</span>
+            <div id="connection-badge" class="connection-badge">
+                <span id="connection-status">连接中...</span>
+            </div>
         </div>
-
-        <div id="output" class="output-container"></div>
-
-        <div class="input-container">
-            <span class="prompt">swat_skill> </span>
-            <input type="text" id="command-input" autofocus autocomplete="off">
+        <div class="header-right">
+            <span class="快捷键提示"><kbd>Tab</kbd> 补全</span>
+            <span class="快捷键提示"><kbd>↑↓</kbd> 历史</span>
+            <span class="快捷键提示"><kbd>Enter</kbd> 执行</span>
         </div>
-    </div>
+    </header>
+
+    <main class="main-container">
+        <aside class="sidebar">
+            <div class="sidebar-title">诊断技能</div>
+            <ul class="skill-list" id="skill-list">
+                <li class="skill-item" data-command="/health">
+                    <span class="skill-icon">🔍</span>
+                    <span>/health</span>
+                </li>
+                <li class="skill-item" data-command="/sessions">
+                    <span class="skill-icon">👥</span>
+                    <span>/sessions</span>
+                </li>
+                <li class="skill-item" data-command="/locks">
+                    <span class="skill-icon">🔒</span>
+                    <span>/locks</span>
+                </li>
+                <li class="skill-item" data-command="/space">
+                    <span class="skill-icon">📊</span>
+                    <span>/space</span>
+                </li>
+                <li class="skill-item" data-command="/slowsql">
+                    <span class="skill-icon">⚡</span>
+                    <span>/slowsql</span>
+                </li>
+                <li class="skill-item" data-command="/topsql">
+                    <span class="skill-icon">📈</span>
+                    <span>/topsql</span>
+                </li>
+                <li class="skill-item" data-command="/vacuum">
+                    <span class="skill-icon">🧹</span>
+                    <span>/vacuum</span>
+                </li>
+                <li class="skill-item" data-command="/waits">
+                    <span class="skill-icon">⏳</span>
+                    <span>/waits</span>
+                </li>
+                <div class="skill-category">更多命令见 /help</div>
+            </ul>
+        </aside>
+
+        <div class="terminal-area">
+            <div class="output-container" id="output">
+                <div class="banner-container">
+                    <div class="banner-logo">SWAT SKILL</div>
+                    <div class="banner-title">PostgreSQL 智能诊断 Agent</div>
+                    <div class="banner-version">v1.3.0</div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <span class="input-prompt">swat_skill&gt;</span>
+                    <input type="text" id="command-input" placeholder="输入命令或 SQL..." autofocus autocomplete="off" spellcheck="false">
+                </div>
+                <div class="input-actions">
+                    <button class="action-btn" id="clear-btn">清屏</button>
+                    <button class="action-btn" id="help-btn">帮助</button>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <script>
-        const banner = `{banner}`;
         const outputEl = document.getElementById('output');
         const inputEl = document.getElementById('command-input');
         const statusEl = document.getElementById('connection-status');
+        const badgeEl = document.getElementById('connection-badge');
+        const skillListEl = document.getElementById('skill-list');
+        const clearBtn = document.getElementById('clear-btn');
+        const helpBtn = document.getElementById('help-btn');
+
         let ws = null;
         let sessionId = null;
         let commandHistory = [];
         let historyIndex = -1;
-        let skillNames = [];  // Available skill names for autocomplete
+        let skillNames = [];
+
+        // Skill list click handler
+        skillListEl.addEventListener('click', (e) => {
+            const item = e.target.closest('.skill-item');
+            if (item) {
+                const command = item.dataset.command;
+                inputEl.value = command;
+                inputEl.focus();
+            }
+        });
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            outputEl.innerHTML = `
+                <div class="banner-container">
+                    <div class="banner-logo">SWAT SKILL</div>
+                    <div class="banner-title">PostgreSQL 智能诊断 Agent</div>
+                    <div class="banner-version">v1.3.0</div>
+                </div>
+            `;
+        });
+
+        // Help button
+        helpBtn.addEventListener('click', () => {
+            sendCommand('/help');
+        });
 
         function connect() {
             const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${wsProtocol}//${location.host}/ws`);
 
             ws.onopen = () => {
-                statusEl.textContent = 'Connected';
-                statusEl.className = 'connection-status connected';
-                appendLine('Welcome to swat_skill Web Terminal');
-                appendLine('Type /help for available commands', 'info');
+                statusEl.textContent = '已连接';
+                badgeEl.className = 'connection-badge connected';
             };
 
             ws.onmessage = (event) => {
@@ -225,16 +772,16 @@ TERMINAL_HTML = """
                 handleResult(result);
             };
 
-            ws.onerror = (error) => {
-                statusEl.textContent = 'Connection error';
-                statusEl.className = 'connection-status error';
-                appendLine('WebSocket error', 'error');
+            ws.onerror = () => {
+                statusEl.textContent = '连接错误';
+                badgeEl.className = 'connection-badge error';
+                appendLine('WebSocket 连接错误', 'error');
             };
 
             ws.onclose = () => {
-                statusEl.textContent = 'Disconnected';
-                statusEl.className = 'connection-status error';
-                appendLine('Connection closed', 'info');
+                statusEl.textContent = '已断开';
+                badgeEl.className = 'connection-badge error';
+                appendLine('连接已关闭', 'warning');
             };
         }
 
@@ -245,7 +792,7 @@ TERMINAL_HTML = """
                     skillNames = result.skill_names || [];
                     if (result.server_info && result.server_info.success) {
                         const info = result.server_info.info;
-                        appendLine(`Connected to PostgreSQL ${info.version || 'Unknown'}`, 'success');
+                        appendLine(`✓ 已连接到 PostgreSQL ${info.version || 'Unknown'}`, 'success');
                         addSeparator();
                     }
                     break;
@@ -294,13 +841,16 @@ TERMINAL_HTML = """
 
         function renderTable(result) {
             if (!result.columns || !result.rows) {
-                appendLine('No data', 'info');
+                appendLine('无数据', 'info');
                 addSeparator();
                 return;
             }
 
             const block = document.createElement('div');
             block.className = 'result-block';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'result-table-wrapper';
 
             const table = document.createElement('table');
             table.className = 'result-table';
@@ -318,17 +868,22 @@ TERMINAL_HTML = """
                 const tr = table.insertRow();
                 result.columns.forEach(col => {
                     const td = tr.insertCell();
-                    td.textContent = row[col] !== null && row[col] !== undefined ? String(row[col]) : '';
+                    const value = row[col];
+                    td.textContent = value !== null && value !== undefined ? String(value) : '';
                 });
             });
 
-            block.appendChild(table);
+            wrapper.appendChild(table);
+            block.appendChild(wrapper);
 
-            // Row count
-            const count = document.createElement('div');
-            count.className = 'dim';
-            count.textContent = `${result.row_count} rows, ${result.execution_time.toFixed(3)}s`;
-            block.appendChild(count);
+            // Row count footer
+            const footer = document.createElement('div');
+            footer.className = 'row-count';
+            footer.innerHTML = `
+                <span>${result.row_count} 行结果</span>
+                <span class="execution-time">${result.execution_time.toFixed(3)}s</span>
+            `;
+            block.appendChild(footer);
 
             outputEl.appendChild(block);
             addSeparator();
@@ -342,10 +897,14 @@ TERMINAL_HTML = """
             const container = document.createElement('div');
             container.className = 'health-container';
 
-            // Overall status
-            const overallDiv = document.createElement('div');
-            overallDiv.innerHTML = `<strong>Overall: </strong>${getStatusSymbol(result.overall)} ${result.overall.toUpperCase()}`;
-            container.appendChild(overallDiv);
+            // Header
+            const header = document.createElement('div');
+            header.className = 'health-header';
+            header.innerHTML = `
+                <span class="health-overall">数据库健康状态</span>
+                <span class="health-status-badge ${result.overall}">${getStatusText(result.overall)}</span>
+            `;
+            container.appendChild(header);
 
             // Group items by category
             const categories = {};
@@ -363,12 +922,26 @@ TERMINAL_HTML = """
                 catDiv.textContent = category;
                 container.appendChild(catDiv);
 
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'health-items';
+
                 items.forEach(item => {
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'health-item';
-                    itemDiv.innerHTML = `${getStatusSymbol(item.status)} ${item.name}: ${item.value}`;
-                    container.appendChild(itemDiv);
+                    itemDiv.innerHTML = `
+                        <span class="status-icon ${item.status}">${getStatusSymbol(item.status)}</span>
+                        <span class="health-item-name">${item.name}</span>
+                        <span class="health-item-value">${item.value}</span>
+                    `;
+                    if (item.tip) {
+                        const tipDiv = document.createElement('div');
+                        tipDiv.className = 'health-item-tip';
+                        tipDiv.textContent = item.tip;
+                        itemDiv.appendChild(tipDiv);
+                    }
+                    itemsDiv.appendChild(itemDiv);
                 });
+                container.appendChild(itemsDiv);
             }
 
             block.appendChild(container);
@@ -379,17 +952,26 @@ TERMINAL_HTML = """
 
         function getStatusSymbol(status) {
             switch (status) {
-                case 'ok': return '<span class="status-ok">✓</span>';
-                case 'warning': return '<span class="status-warning">⚠</span>';
-                case 'critical': return '<span class="status-critical">✗</span>';
+                case 'ok': return '✓';
+                case 'warning': return '⚠';
+                case 'critical': return '✗';
                 default: return '?';
+            }
+        }
+
+        function getStatusText(status) {
+            switch (status) {
+                case 'ok': return '健康';
+                case 'warning': return '警告';
+                case 'critical': return '异常';
+                default: return '未知';
             }
         }
 
         function appendLine(text, type = '') {
             const div = document.createElement('div');
             div.className = 'output-line ' + type;
-            div.innerHTML = text;
+            div.textContent = text;
             outputEl.appendChild(div);
             scrollToBottom();
         }
@@ -407,12 +989,15 @@ TERMINAL_HTML = """
 
         function sendCommand(command) {
             if (!ws || ws.readyState !== WebSocket.OPEN) {
-                appendLine('Not connected', 'error');
+                appendLine('未连接', 'error');
                 return;
             }
 
             // Show command in output
-            appendLine(`<span class="prompt">swat_skill> </span>${command}`, 'command');
+            const cmdDiv = document.createElement('div');
+            cmdDiv.className = 'output-line command';
+            cmdDiv.innerHTML = `<span class="prompt">swat_skill&gt;</span> ${command}`;
+            outputEl.appendChild(cmdDiv);
 
             // Add to history
             if (command.trim()) {
@@ -420,8 +1005,8 @@ TERMINAL_HTML = """
                 historyIndex = commandHistory.length;
             }
 
-            // Send to server
             ws.send(JSON.stringify({ command }));
+            scrollToBottom();
         }
 
         // Input handler
@@ -431,11 +1016,9 @@ TERMINAL_HTML = """
                 sendCommand(command);
                 inputEl.value = '';
             } else if (e.key === 'Tab') {
-                // Autocomplete
                 autocomplete();
                 e.preventDefault();
             } else if (e.key === 'ArrowUp') {
-                // History navigation
                 if (historyIndex > 0) {
                     historyIndex--;
                     inputEl.value = commandHistory[historyIndex] || '';
@@ -455,23 +1038,15 @@ TERMINAL_HTML = """
 
         function autocomplete() {
             const input = inputEl.value;
-            if (!input.startsWith('/')) {
-                return;  // Only autocomplete commands
-            }
+            if (!input.startsWith('/')) return;
 
-            // Find matching skills
             const matches = skillNames.filter(s => s.startsWith(input));
-            if (matches.length === 0) {
-                return;
-            }
+            if (matches.length === 0) return;
 
             if (matches.length === 1) {
-                // Single match: complete it
                 inputEl.value = matches[0] + ' ';
             } else {
-                // Multiple matches: show them
-                appendLine(`Matches: ${matches.join('  ')}`, 'info');
-                // Find common prefix
+                appendLine(`匹配: ${matches.join('  ')}`, 'info');
                 let commonPrefix = matches[0];
                 for (let i = 1; i < matches.length; i++) {
                     while (!matches[i].startsWith(commonPrefix) && commonPrefix.length > input.length) {
@@ -481,6 +1056,7 @@ TERMINAL_HTML = """
                 if (commonPrefix.length > input.length) {
                     inputEl.value = commonPrefix;
                 }
+                scrollToBottom();
             }
         }
 
@@ -510,8 +1086,7 @@ async def shutdown_event():
 @app.get("/", response_class=HTMLResponse)
 async def index():
     """Render terminal interface."""
-    html = TERMINAL_HTML.replace("{banner}", SWAT_SKILL_BANNER)
-    return html
+    return TERMINAL_HTML
 
 
 @app.websocket("/ws")
@@ -531,7 +1106,7 @@ async def get_status():
     """Get server status."""
     return {
         "active_sessions": session_manager.get_active_count(),
-        "version": "1.2.0",
+        "version": "1.3.0",
     }
 
 
