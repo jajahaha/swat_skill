@@ -421,18 +421,19 @@ elif config.llm.provider == "anthropic":
 
 ## 9. 后续规划
 
-### v1.5.0 (已完成)
+### v1.6.0 (已完成)
 
-- dbtop 命令优化（CLI 实时刷新、Web 格式化显示）
-- Rich 格式化输出
+- dbtop 显示重构（参考 pg_top）
+- Rich Layout 分区域显示
+- Table 直接渲染（不转为字符串）
 
-### v1.6.0
+### v1.7.0
 
 - Sentinel 实时监控
 - Rule 规则引擎（确定性诊断）
 - Scheduler 定时巡检
 
-### v1.7.0
+### v1.8.0
 
 - MySQL 支持
 - Oracle 支持（可选）

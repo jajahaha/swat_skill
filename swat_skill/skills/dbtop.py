@@ -7,8 +7,8 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.layout import Layout
-from rich.live import Live
 from rich.text import Text
+from rich import box
 
 from ..database.connection import ConnectionManager
 from ..database.queries import get_query
@@ -52,7 +52,7 @@ class DbtopSkill(Skill):
         is_cli = hasattr(formatter, 'console') and formatter.console is not None
 
         if is_cli:
-            # CLI mode: use Live for real-time display
+            # CLI mode: use Layout for real-time display
             return self._execute_cli(conn, formatter, interval, iterations)
         else:
             # Web mode: return formatted data
@@ -65,16 +65,16 @@ class DbtopSkill(Skill):
         interval: int,
         iterations: int,
     ) -> SkillResult:
-        """Execute in CLI mode with real-time display."""
+        """Execute in CLI mode with real-time display using Layout."""
         console = formatter.console
 
         try:
             iteration = 0
             while iterations == 0 or iteration < iterations:
                 metrics = self._collect_metrics(conn)
-                panel = self._format_dbtop_panel(metrics, console)
+                layout = self._format_dbtop_layout(metrics)
                 console.clear()
-                console.print(panel)
+                console.print(layout)
 
                 if iterations != 0 and iteration < iterations - 1:
                     time.sleep(interval)
@@ -84,6 +84,145 @@ class DbtopSkill(Skill):
             console.print("\n[yellow]dbtop stopped[/yellow]")
 
         return SkillResult(success=True, data=None, result_type="text", message="dbtop completed")
+
+    def _format_dbtop_layout(self, metrics: dict) -> Layout:
+        """Format dbtop display using Rich Layout - similar to pg_top style."""
+        # Create main layout
+        layout = Layout()
+        layout.split(
+            Layout(name="header", size=2),
+            Layout(name="stats", size=2),
+            Layout(name="table", ratio=1),
+            Layout(name="footer", size=1),
+        )
+
+        # Header - title and time
+        header_text = Text()
+        header_text.append("SWAT SKILL dbtop", style="bold cyan")
+        header_text.append(" - PostgreSQL Monitor", style="dim")
+        header_text.append(f"          {metrics['timestamp']}", style="white")
+        layout["header"].update(Panel(header_text, box=box.SIMPLE, style="cyan"))
+
+        # Stats - summary line
+        sessions = metrics.get('active_sessions', 0)
+        total_conn = metrics.get('current_connections', 0)
+        max_conn = metrics.get('max_connections', 0)
+        cache_hit = metrics.get('cache_hit_ratio', 0)
+        xact_commit = metrics.get('xact_commit', 0)
+        xact_rollback = metrics.get('xact_rollback', 0)
+
+        # Calculate TPS (approximate)
+        tps = xact_commit  # This is cumulative, not per-second
+
+        stats_text = Text()
+        stats_text.append(f"Active: ", style="dim")
+        stats_text.append(f"{sessions}", style="green bold")
+        stats_text.append(f"   Total: {total_conn}/{max_conn}", style="default")
+        stats_text.append(f"   Cache: ", style="dim")
+        if cache_hit >= 90:
+            stats_text.append(f"{cache_hit:.1f}%", style="green")
+        elif cache_hit >= 70:
+            stats_text.append(f"{cache_hit:.1f}%", style="yellow")
+        else:
+            stats_text.append(f"{cache_hit:.1f}%", style="red")
+        stats_text.append(f"   Commit: {xact_commit}", style="default")
+        stats_text.append(f"   Rollback: {xact_rollback}", style="default")
+        layout["stats"].update(Panel(stats_text, box=box.SIMPLE))
+
+        # Table - session list
+        table = Table(
+            show_header=True,
+            header_style="bold cyan",
+            box=box.SIMPLE_HEAD,
+            expand=True,
+        )
+        table.add_column("PID", style="cyan", width=8)
+        table.add_column("USER", width=12)
+        table.add_column("STATE", width=12)
+        table.add_column("DURATION", width=10)
+        table.add_column("WAIT", width=14)
+        table.add_column("QUERY", width=40)
+
+        sessions_data = metrics.get('sessions_data', [])
+        if sessions_data:
+            for session in sessions_data:
+                pid = str(session.get('pid', ''))
+
+                # User (truncate if needed)
+                user = str(session.get('usename', ''))[:12]
+
+                # State with color
+                state = str(session.get('state', ''))
+                if state == 'active':
+                    state_display = f"[green]active[/green]"
+                elif state == 'idle':
+                    state_display = f"[dim]idle[/dim]"
+                elif state == 'idle in transaction':
+                    state_display = f"[yellow]idle_tx[/yellow]"
+                else:
+                    state_display = state[:12]
+
+                # Duration
+                duration = session.get('duration_seconds')
+                if duration is not None and float(duration) >= 0:
+                    dur_val = float(duration)
+                    if dur_val < 1:
+                        dur_str = f"{dur_val:.2f}s"
+                    elif dur_val < 60:
+                        dur_str = f"{dur_val:.1f}s"
+                    else:
+                        dur_str = f"{dur_val/60:.1f}m"
+                    # Color by duration
+                    if dur_val > 60:
+                        dur_display = f"[red]{dur_str}[/red]"
+                    elif dur_val > 10:
+                        dur_display = f"[yellow]{dur_str}[/yellow]"
+                    else:
+                        dur_display = dur_str
+                else:
+                    dur_display = "-"
+
+                # Wait event
+                wait_type = session.get('wait_event_type', '')
+                wait_event = session.get('wait_event', '')
+                if wait_type and wait_event:
+                    wait_display = f"{wait_type[:6]}:{wait_event[:8]}"
+                else:
+                    wait_display = "-"
+
+                # Query preview
+                query = str(session.get('query_preview', '') or '')
+                # Clean up query - remove leading whitespace
+                query = query.strip()
+                if len(query) > 40:
+                    query = query[:37] + "..."
+
+                table.add_row(pid, user, state_display, dur_display, wait_display, query)
+        else:
+            # No active sessions
+            table.add_row("-", "-", "[dim]no active[/dim]", "-", "-", "-")
+
+        layout["table"].update(table)
+
+        # Footer - wait events summary
+        footer_text = Text()
+        footer_text.append("Wait Events: ", style="bold yellow")
+        wait_events = metrics.get('wait_events', [])
+        if wait_events:
+            event_strs = []
+            for event in wait_events[:5]:
+                event_type = event.get('wait_event_type', '')
+                event_name = event.get('wait_event', '')
+                count = event.get('count', 0)
+                if event_type and event_name:
+                    event_strs.append(f"{event_name}({count})")
+            footer_text.append(", ".join(event_strs), style="default")
+        else:
+            footer_text.append("none", style="dim")
+
+        layout["footer"].update(Panel(footer_text, box=box.SIMPLE, style="yellow"))
+
+        return layout
 
     def _execute_web(
         self,
@@ -108,86 +247,6 @@ class DbtopSkill(Skill):
             result_type="dbtop",
         )
 
-    def _format_dbtop_panel(self, metrics: dict, console: Console) -> Panel:
-        """Format dbtop as a panel similar to Linux top."""
-        lines = []
-
-        # Header line
-        lines.append(f"[bold cyan]SWAT SKILL dbtop[/bold cyan] - {metrics['timestamp']}")
-        lines.append(f"[dim]Press Ctrl+C to stop[/dim]")
-        lines.append("")
-
-        # Summary line
-        sessions = metrics.get('active_sessions', 0)
-        max_conn = metrics.get('max_connections', 0)
-        curr_conn = metrics.get('current_connections', 0)
-        cache_hit = metrics.get('cache_hit_ratio', 0)
-
-        lines.append(f"[bold]Summary:[/bold]")
-        lines.append(f"  Active Sessions: [green]{sessions}[/green]")
-        lines.append(f"  Connections: {curr_conn}/{max_conn}")
-        lines.append(f"  Cache Hit Ratio: [green]{cache_hit:.1f}%[/green]")
-        lines.append(f"  Transactions: commit={metrics.get('xact_commit', 0)}, rollback={metrics.get('xact_rollback', 0)}")
-        lines.append("")
-
-        # Active sessions table
-        if metrics.get('sessions_data'):
-            lines.append("[bold]Active Sessions:[/bold]")
-
-            # Create table
-            table = Table(show_header=True, header_style="bold cyan", box=None)
-            table.add_column("PID", style="cyan", width=8)
-            table.add_column("User", width=10)
-            table.add_column("State", width=10)
-            table.add_column("Duration", width=10)
-            table.add_column("Query Preview", width=40)
-
-            for session in metrics['sessions_data']:
-                pid = str(session.get('pid', ''))
-                user = session.get('usename', '')[:10]
-                state = session.get('state', '')
-                duration = session.get('duration_seconds', 0)
-
-                # Format duration
-                if duration >= 0:
-                    dur_str = f"{float(duration):.2f}s"
-                else:
-                    dur_str = "N/A"
-
-                # Query preview
-                query = session.get('query_preview', '')
-                if len(query) > 40:
-                    query = query[:37] + "..."
-
-                # Color state
-                if state == 'active':
-                    state_str = f"[green]{state}[/green]"
-                elif state == 'idle':
-                    state_str = f"[dim]{state}[/dim]"
-                else:
-                    state_str = state
-
-                table.add_row(pid, user, state_str, dur_str, query)
-
-            lines.append(table)
-        else:
-            lines.append("[dim]No active sessions[/dim]")
-
-        lines.append("")
-
-        # Wait events
-        if metrics.get('wait_events'):
-            lines.append("[bold yellow]Wait Events:[/bold yellow]")
-            for event in metrics['wait_events'][:5]:
-                event_type = event.get('wait_event_type', '')
-                event_name = event.get('wait_event', '')
-                count = event.get('count', 0)
-                lines.append(f"  {event_type}: {event_name} ({count})")
-        else:
-            lines.append("[dim]No wait events[/dim]")
-
-        return Panel("\n".join(str(line) for line in lines), border_style="cyan", title="Database Top")
-
     def _format_for_web(self, metrics: dict) -> dict:
         """Format metrics for web display."""
         # Simplify data for web
@@ -205,12 +264,39 @@ class DbtopSkill(Skill):
         if metrics.get("sessions_data"):
             sessions_table = []
             for session in metrics["sessions_data"]:
+                # Format duration
+                duration = session.get("duration_seconds")
+                if duration is not None and float(duration) >= 0:
+                    dur_val = float(duration)
+                    if dur_val < 1:
+                        dur_str = f"{dur_val:.2f}s"
+                    elif dur_val < 60:
+                        dur_str = f"{dur_val:.1f}s"
+                    else:
+                        dur_str = f"{dur_val/60:.1f}m"
+                else:
+                    dur_str = "-"
+
+                # Format wait event
+                wait_type = session.get("wait_event_type", "")
+                wait_event = session.get("wait_event", "")
+                if wait_type and wait_event:
+                    wait_str = f"{wait_type}:{wait_event}"
+                else:
+                    wait_str = "-"
+
+                # Query preview
+                query = str(session.get("query_preview", "") or "").strip()
+                if len(query) > 50:
+                    query = query[:47] + "..."
+
                 sessions_table.append({
                     "PID": session.get("pid", ""),
                     "User": session.get("usename", ""),
                     "State": session.get("state", ""),
-                    "Duration": str(session.get("duration_seconds", "")),
-                    "Query Preview": (session.get("query_preview", "") or "")[:50],
+                    "Duration": dur_str,
+                    "Wait": wait_str,
+                    "Query": query,
                 })
             formatted["sessions_table"] = sessions_table
 
@@ -235,6 +321,10 @@ class DbtopSkill(Skill):
         result = conn.execute(get_query("sessions_active"))
         metrics["active_sessions"] = len(result.rows) if result.success else 0
         metrics["sessions_data"] = result.rows if result.success else []
+
+        # Get all sessions count
+        result = conn.execute(get_query("sessions_all"))
+        metrics["total_sessions"] = len(result.rows) if result.success else 0
 
         # Get wait events
         result = conn.execute(get_query("wait_events"))

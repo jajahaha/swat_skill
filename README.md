@@ -1,4 +1,4 @@
-# swat_skill v1.5.0 - PostgreSQL Database CLI Agent
+# swat_skill v1.6.0 - PostgreSQL Database CLI Agent
 
 <p align="center">
   <pre align="center">
@@ -200,7 +200,7 @@ export ANTHROPIC_API_KEY=your-api-key
 
 ## 🌐 Web Interface
 
-swat_skill v1.5.0 提供了网页端入口，支持在浏览器中使用所有 CLI 功能。
+swat_skill v1.6.0 提供了网页端入口，支持在浏览器中使用所有 CLI 功能。
 
 ### 启动 Web 服务器
 
