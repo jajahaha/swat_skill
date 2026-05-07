@@ -100,6 +100,29 @@ class WebFormatter:
             "content": content,
         }
 
+    def format_dbtop(self, data: List[Dict]) -> Dict:
+        """Format dbtop results for web display."""
+        if not data:
+            return {"type": "info", "message": "No data collected"}
+
+        # Return the latest snapshot as summary
+        latest = data[-1]
+
+        return {
+            "type": "dbtop",
+            "timestamp": latest.get("timestamp", ""),
+            "summary": {
+                "active_sessions": latest.get("active_sessions", 0),
+                "connections": f"{latest.get('current_connections', 0)}/{latest.get('max_connections', 0)}",
+                "cache_hit_ratio": latest.get("cache_hit_ratio", 0),
+                "xact_commit": latest.get("xact_commit", 0),
+                "xact_rollback": latest.get("xact_rollback", 0),
+            },
+            "sessions": latest.get("sessions_table", []),
+            "wait_events": latest.get("wait_events_table", []),
+            "snapshots": len(data),
+        }
+
 
 class WebSession:
     """Web session with connection and dispatcher."""
@@ -167,6 +190,10 @@ class WebSession:
                 "success": result.success,
                 "error": result.error,
             }
+
+        elif result.result_type == "dbtop":
+            # Format dbtop results for web
+            return self.formatter.format_dbtop(result.data or [])
 
         else:
             # Unknown result type

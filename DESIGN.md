@@ -421,19 +421,18 @@ elif config.llm.provider == "anthropic":
 
 ## 9. 后续规划
 
-### v1.4.0 (已完成)
+### v1.5.0 (已完成)
 
-- 测试框架（57 个测试用例）
-- GitHub Actions CI/CD
-- pytest-asyncio 支持
+- dbtop 命令优化（CLI 实时刷新、Web 格式化显示）
+- Rich 格式化输出
 
-### v1.5.0
+### v1.6.0
 
 - Sentinel 实时监控
 - Rule 规则引擎（确定性诊断）
 - Scheduler 定时巡检
 
-### v1.6.0
+### v1.7.0
 
 - MySQL 支持
 - Oracle 支持（可选）

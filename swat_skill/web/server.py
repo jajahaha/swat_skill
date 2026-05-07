@@ -21,7 +21,7 @@ from .adapter import WebFormatter
 app = FastAPI(
     title="swat_skill Web",
     description="PostgreSQL Database CLI Agent - Web Interface",
-    version="1.4.0",
+    version="1.5.0",
 )
 
 # CORS middleware for development
@@ -529,6 +529,76 @@ TERMINAL_HTML = """
         .status-warning { color: var(--accent-yellow); }
         .status-critical { color: var(--accent-red); }
 
+        /* dbtop Container */
+        .dbtop-container {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .dbtop-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dbtop-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .dbtop-time {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+        }
+
+        .dbtop-summary {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .dbtop-summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .dbtop-summary-item .label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .dbtop-summary-item .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .dbtop-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin: 12px 0 8px 0;
+            text-transform: uppercase;
+        }
+
+        .dbtop-footer {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 12px;
+            text-align: right;
+        }
+
         /* Input Container */
         .input-container {
             background: var(--bg-secondary);
@@ -700,7 +770,7 @@ TERMINAL_HTML = """
                 <div class="banner-container">
                     <div class="banner-logo">SWAT SKILL</div>
                     <div class="banner-title">PostgreSQL 智能诊断 Agent</div>
-                    <div class="banner-version">v1.4.0</div>
+                    <div class="banner-version">v1.5.0</div>
                 </div>
             </div>
 
@@ -748,7 +818,7 @@ TERMINAL_HTML = """
                 <div class="banner-container">
                     <div class="banner-logo">SWAT SKILL</div>
                     <div class="banner-title">PostgreSQL 智能诊断 Agent</div>
-                    <div class="banner-version">v1.4.0</div>
+                    <div class="banner-version">v1.5.0</div>
                 </div>
             `;
         });
@@ -830,6 +900,9 @@ TERMINAL_HTML = """
                         appendLine(result.error, 'error');
                         addSeparator();
                     }
+                    break;
+                case 'dbtop':
+                    renderDbtop(result);
                     break;
                 default:
                     if (result.content) {
@@ -966,6 +1039,126 @@ TERMINAL_HTML = """
                 case 'critical': return '异常';
                 default: return '未知';
             }
+        }
+
+        function renderDbtop(result) {
+            const block = document.createElement('div');
+            block.className = 'result-block';
+
+            const container = document.createElement('div');
+            container.className = 'dbtop-container';
+
+            // Header
+            const header = document.createElement('div');
+            header.className = 'dbtop-header';
+            header.innerHTML = `
+                <span class="dbtop-title">📊 Database Top</span>
+                <span class="dbtop-time">${result.timestamp || ''}</span>
+            `;
+            container.appendChild(header);
+
+            // Summary section
+            const summary = result.summary || {};
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'dbtop-summary';
+            summaryDiv.innerHTML = `
+                <div class="dbtop-summary-item">
+                    <span class="label">活跃会话</span>
+                    <span class="value">${summary.active_sessions || 0}</span>
+                </div>
+                <div class="dbtop-summary-item">
+                    <span class="label">连接数</span>
+                    <span class="value">${summary.connections || '0/0'}</span>
+                </div>
+                <div class="dbtop-summary-item">
+                    <span class="label">缓存命中率</span>
+                    <span class="value">${summary.cache_hit_ratio || 0}%</span>
+                </div>
+                <div class="dbtop-summary-item">
+                    <span class="label">事务提交</span>
+                    <span class="value">${summary.xact_commit || 0}</span>
+                </div>
+                <div class="dbtop-summary-item">
+                    <span class="label">事务回滚</span>
+                    <span class="value">${summary.xact_rollback || 0}</span>
+                </div>
+            `;
+            container.appendChild(summaryDiv);
+
+            // Sessions table
+            if (result.sessions && result.sessions.length > 0) {
+                const sessionsTitle = document.createElement('div');
+                sessionsTitle.className = 'dbtop-section-title';
+                sessionsTitle.textContent = '活跃会话';
+                container.appendChild(sessionsTitle);
+
+                const tableWrapper = document.createElement('div');
+                tableWrapper.className = 'result-table-wrapper';
+
+                const table = document.createElement('table');
+                table.className = 'result-table';
+
+                const headerRow = table.insertRow();
+                ['PID', 'User', 'State', 'Duration', 'Query Preview'].forEach(col => {
+                    const th = document.createElement('th');
+                    th.textContent = col;
+                    headerRow.appendChild(th);
+                });
+
+                result.sessions.forEach(row => {
+                    const tr = table.insertRow();
+                    ['PID', 'User', 'State', 'Duration', 'Query Preview'].forEach(col => {
+                        const td = tr.insertCell();
+                        td.textContent = row[col] || '';
+                    });
+                });
+
+                tableWrapper.appendChild(table);
+                container.appendChild(tableWrapper);
+            }
+
+            // Wait events table
+            if (result.wait_events && result.wait_events.length > 0) {
+                const waitTitle = document.createElement('div');
+                waitTitle.className = 'dbtop-section-title';
+                waitTitle.textContent = '等待事件';
+                container.appendChild(waitTitle);
+
+                const tableWrapper = document.createElement('div');
+                tableWrapper.className = 'result-table-wrapper';
+
+                const table = document.createElement('table');
+                table.className = 'result-table';
+
+                const headerRow = table.insertRow();
+                ['Type', 'Event', 'Count'].forEach(col => {
+                    const th = document.createElement('th');
+                    th.textContent = col;
+                    headerRow.appendChild(th);
+                });
+
+                result.wait_events.forEach(row => {
+                    const tr = table.insertRow();
+                    ['Type', 'Event', 'Count'].forEach(col => {
+                        const td = tr.insertCell();
+                        td.textContent = row[col] || '';
+                    });
+                });
+
+                tableWrapper.appendChild(table);
+                container.appendChild(tableWrapper);
+            }
+
+            // Footer
+            const footer = document.createElement('div');
+            footer.className = 'dbtop-footer';
+            footer.textContent = `共 ${result.snapshots || 1} 次采样`;
+            container.appendChild(footer);
+
+            block.appendChild(container);
+            outputEl.appendChild(block);
+            addSeparator();
+            scrollToBottom();
         }
 
         function appendLine(text, type = '') {
@@ -1106,7 +1299,7 @@ async def get_status():
     """Get server status."""
     return {
         "active_sessions": session_manager.get_active_count(),
-        "version": "1.4.0",
+        "version": "1.5.0",
     }
 
 
