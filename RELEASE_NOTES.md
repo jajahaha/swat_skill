@@ -1,5 +1,42 @@
 # Release Notes
 
+## v1.4.0 (2026-05-07)
+
+🧪 **测试框架与 CI/CD**
+
+swat_skill v1.4.0 添加了完整的测试框架和 GitHub Actions CI 配置，确保代码质量。
+
+### 🧪 测试框架
+
+#### 测试用例
+- **Config 测试**：配置加载、保存、默认值、环境变量
+- **Dispatcher 测试**：SQL 检测、输入路由、技能执行
+- **Skills Registry 测试**：技能注册、别名、帮助文本
+- **Web Adapter 测试**：WebFormatter 格式化、WebSession 会话管理
+- **Web Session 测试**：SessionManager 创建、删除、过期清理
+
+#### 测试统计
+- **57 个测试用例**
+- 覆盖核心模块：Config、Dispatcher、Skills、Web Interface
+
+### 🔧 CI/CD
+
+#### GitHub Actions
+- **自动化测试**：每次 push 和 PR 自动运行测试
+- **多版本支持**：Python 3.10、3.11、3.12
+- **覆盖率报告**：pytest-cov 生成覆盖率报告
+
+### 📝 其他改进
+
+- 修复 dispatcher/parser.py 导入错误
+- 添加 pytest-asyncio 支持
+
+### 📦 新增依赖
+
+- pytest-asyncio>=0.21
+
+---
+
 ## v1.3.0 (2026-05-07)
 
 🎨 **Web Interface UI 重构与体验升级**
@@ -243,8 +280,10 @@ pip install -e .
 
 | Version | Date | Description |
 |---------|------|-------------|
+| v1.4.0 | 2026-05-07 | 测试框架与 CI/CD |
 | v1.3.0 | 2026-05-07 | Web Interface UI 重构与体验升级 |
 | v1.2.0 | 2026-05-07 | Web Interface Bug 修复与体验优化 |
 | v1.1.0 | 2026-05-07 | Web Interface 新功能 |
 | v1.0.1 | 2026-05-06 | Bug 修复与样式更新 |
+| v1.0.0 | 2026-05-06 | 首个正式版本 |
 | v1.0.0 | 2026-05-06 | 首个正式版本 |

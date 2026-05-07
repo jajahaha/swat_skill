@@ -21,7 +21,7 @@ from .adapter import WebFormatter
 app = FastAPI(
     title="swat_skill Web",
     description="PostgreSQL Database CLI Agent - Web Interface",
-    version="1.3.0",
+    version="1.4.0",
 )
 
 # CORS middleware for development
@@ -700,7 +700,7 @@ TERMINAL_HTML = """
                 <div class="banner-container">
                     <div class="banner-logo">SWAT SKILL</div>
                     <div class="banner-title">PostgreSQL 智能诊断 Agent</div>
-                    <div class="banner-version">v1.3.0</div>
+                    <div class="banner-version">v1.4.0</div>
                 </div>
             </div>
 
@@ -748,7 +748,7 @@ TERMINAL_HTML = """
                 <div class="banner-container">
                     <div class="banner-logo">SWAT SKILL</div>
                     <div class="banner-title">PostgreSQL 智能诊断 Agent</div>
-                    <div class="banner-version">v1.3.0</div>
+                    <div class="banner-version">v1.4.0</div>
                 </div>
             `;
         });
@@ -1106,7 +1106,7 @@ async def get_status():
     """Get server status."""
     return {
         "active_sessions": session_manager.get_active_count(),
-        "version": "1.3.0",
+        "version": "1.4.0",
     }
 
 

@@ -5,7 +5,7 @@ A database CLI agent inspired by Claude Code's interactive approach.
 Provides three interaction modes: /commands, SQL statements, and natural language.
 """
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __author__ = "swat_skill"
 
 from .config import Config, load_config
