@@ -421,16 +421,22 @@ elif config.llm.provider == "anthropic":
 
 ## 9. 后续规划
 
-### v1.1.0
+### v1.2.0 (已完成)
+
+- Web Interface 稳定性修复
+- Tab 键命令补全
+- 输出格式优化
+
+### v1.3.0
 
 - Sentinel 实时监控
 - Rule 规则引擎（确定性诊断）
 - Scheduler 定时巡检
 
-### v1.2.0
+### v1.4.0
 
 - MySQL 支持
-- Web UI
+- Oracle 支持（可选）
 - 报告导出
 
 ## 10. 参考资料

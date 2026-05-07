@@ -1,5 +1,82 @@
 # Release Notes
 
+## v1.2.0 (2026-05-07)
+
+🔧 **Web Interface Bug 修复与体验优化**
+
+swat_skill v1.2.0 修复了 Web Interface 的若干问题，提升了用户体验。
+
+### 🐛 修复内容
+
+#### WebSocket 连接稳定性
+- **连接断开问题**：修复输错命令导致 WebSocket 连接断开的问题
+- **异常处理优化**：区分连接错误和执行错误，执行错误不再断开连接
+- **JSON 解析错误**：无效消息格式只报错，不影响连接
+
+#### 输出格式优化
+- **换行显示**：修复文本输出中 `\n` 换行符不显示的问题（添加 `white-space: pre-wrap`）
+- **结果分隔**：各输出块之间添加分隔线，提升可读性
+- **表格样式**：优化表格和健康报告的显示布局
+
+### ✨ 新功能
+
+#### Tab 键命令补全
+- **自动补全**：Web Terminal 支持 Tab 键自动补全命令
+- **多匹配提示**：多个匹配时显示所有候选项
+- **公共前缀补全**：部分匹配时补全到公共前缀
+
+### 📝 文档更新
+
+- 版本号统一更新为 1.2.0
+- RELEASE_NOTES.md 添加版本历史
+
+---
+
+## v1.1.0 (2026-05-07)
+
+🌐 **Web Interface 新功能**
+
+swat_skill v1.1.0 添加了网页端入口，可以在浏览器中使用 swat_skill。
+
+### 🚀 新功能
+
+#### Web Terminal
+- **网页终端**：在浏览器中使用 swat_skill，支持所有 CLI 功能
+- **WebSocket 实时交互**：命令实时执行，结果实时显示
+- **终端风格 UI**：深色主题，类似命令行界面
+- **会话管理**：支持多个独立会话，自动清理过期会话
+
+#### 使用方式
+```bash
+# 启动 Web 服务器
+swat_skill web --port 8080
+
+# 或使用 CLI
+swat_skill web
+```
+
+打开浏览器访问 http://localhost:8080 即可使用。
+
+#### REST API
+提供 REST API 供外部程序调用：
+- `/api/connect` - 创建会话
+- `/api/command/{session_id}` - 执行命令
+- `/api/session/{session_id}` - 删除会话
+- `/api/status` - 获取服务器状态
+
+### 📦 新增依赖
+- fastapi>=0.100.0
+- uvicorn>=0.23.0
+- websockets>=11.0
+- jinja2>=3.1.0
+
+安装方式：
+```bash
+pip install swat_skill[web]
+```
+
+---
+
 ## v1.0.1 (2026-05-06)
 
 🔧 **Bug 修复与样式更新**
@@ -116,5 +193,7 @@ pip install -e .
 
 | Version | Date | Description |
 |---------|------|-------------|
+| v1.2.0 | 2026-05-07 | Web Interface Bug 修复与体验优化 |
+| v1.1.0 | 2026-05-07 | Web Interface 新功能 |
 | v1.0.1 | 2026-05-06 | Bug 修复与样式更新 |
 | v1.0.0 | 2026-05-06 | 首个正式版本 |

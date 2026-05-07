@@ -240,6 +240,22 @@ def run_configure() -> None:
     run_setup()
 
 
+def run_web(host: str = "0.0.0.0", port: int = 8080) -> None:
+    """Run web interface."""
+    formatter = get_formatter()
+    formatter.print_info(f"Starting swat_skill Web Server on {host}:{port}")
+    formatter.console.print(f"[dim]Open http://localhost:{port} in your browser[/dim]")
+
+    try:
+        from .web.server import run_web_server
+        run_web_server(host, port)
+    except ImportError as e:
+        formatter.print_error(f"Web dependencies not installed: {e}")
+        formatter.print_info("Install with: pip install swat_skill[web]")
+    except Exception as e:
+        formatter.print_error(f"Failed to start web server: {e}")
+
+
 def main() -> None:
     """Main entry point."""
     import argparse
@@ -250,7 +266,7 @@ def main() -> None:
     parser.add_argument(
         "command",
         nargs="?",
-        choices=["setup", "configure", "run"],
+        choices=["setup", "configure", "run", "web"],
         default="run",
         help="Command to run",
     )
@@ -261,12 +277,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--host",
-        help="Database host",
+        help="Database host (or web server host for 'web' command)",
     )
     parser.add_argument(
         "--port",
         type=int,
-        help="Database port",
+        help="Database port (or web server port for 'web' command)",
     )
     parser.add_argument(
         "--database",
@@ -287,6 +303,12 @@ def main() -> None:
 
     if args.command == "configure":
         run_configure()
+        return
+
+    if args.command == "web":
+        web_host = args.host or "0.0.0.0"
+        web_port = args.port or 8080
+        run_web(web_host, web_port)
         return
 
     # Load configuration

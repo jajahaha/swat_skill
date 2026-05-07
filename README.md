@@ -1,4 +1,4 @@
-# swat_skill v1.0.1 - PostgreSQL Database CLI Agent
+# swat_skill v1.2.0 - PostgreSQL Database CLI Agent
 
 <p align="center">
   <pre align="center">
@@ -47,10 +47,14 @@ swat_skill 是一个专为 PostgreSQL 设计的数据库智能诊断 CLI Agent�
 # 从 PyPI 安装（即将发布）
 pip install swat_skill
 
+# 安装 Web Interface 支持
+pip install swat_skill[web]
+
 # 从源码安装
 git clone https://github.com/jajahaha/swat_skill.git
 cd swat_skill
 pip install -e .
+pip install -e ".[web]"  # Web Interface 支持
 ```
 
 ## 🚀 快速开始
@@ -72,7 +76,16 @@ swat_skill
 swat_skill --host localhost --port 5432 --database mydb --user postgres
 ```
 
-### 3. 开始诊断
+### 3. 启动 Web Interface
+
+```bash
+# 启动 Web 服务器
+swat_skill web --port 8080
+
+# 然后在浏览器打开 http://localhost:8080
+```
+
+### 4. 开始诊断
 
 ```
 swat_skill> /health
@@ -183,6 +196,37 @@ display:
 
 ```bash
 export ANTHROPIC_API_KEY=your-api-key
+```
+
+## 🌐 Web Interface
+
+swat_skill v1.2.0 提供了网页端入口，支持在浏览器中使用所有 CLI 功能。
+
+### 启动 Web 服务器
+
+```bash
+swat_skill web --port 8080
+```
+
+访问 http://localhost:8080 即可使用。
+
+### Web 功能
+
+| 功能 | 说明 |
+|------|------|
+| 终端风格 UI | 深色主题，类似命令行界面 |
+| WebSocket | 实时命令执行和结果显示 |
+| 会话管理 | 支持多个独立会话 |
+| REST API | `/api/connect`, `/api/command`, `/api/status` |
+
+### REST API 示例
+
+```bash
+# 创建会话
+curl -X POST http://localhost:8080/api/connect
+
+# 执行命令
+curl -X POST "http://localhost:8080/api/command/{session_id}?command=/health"
 ```
 
 ## 🏗️ 架构设计
