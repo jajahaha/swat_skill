@@ -21,7 +21,7 @@ from .adapter import WebFormatter
 app = FastAPI(
     title="swat_skill Web",
     description="PostgreSQL Database CLI Agent - Web Interface",
-    version="1.6.0",
+    version="1.9.1",
 )
 
 # CORS middleware for development
@@ -183,40 +183,97 @@ TERMINAL_HTML = """
             height: calc(100vh - 60px);
         }
 
-        /* Sidebar */
+        /* Sidebar - Two sections */
         .sidebar {
-            width: 240px;
+            width: 280px;
             background: var(--bg-secondary);
             border-right: 1px solid var(--border-color);
-            padding: 16px;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
             flex-shrink: 0;
+            overflow: hidden;
         }
 
-        .sidebar-title {
-            font-size: 12px;
+        /* Skills Section - Top */
+        .sidebar-skills {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-section-title {
+            font-size: 11px;
             font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
+            color: var(--accent-green);
+            margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Search Input */
+        .skill-search-container {
+            margin-bottom: 8px;
+        }
+
+        .skill-search {
+            width: 100%;
+            padding: 6px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            outline: none;
+        }
+
+        .skill-search:focus {
+            border-color: var(--accent-green);
+        }
+
+        .skill-search::placeholder {
+            color: var(--text-muted);
+        }
+
+        .skill-count {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        /* Skill Categories */
+        .skill-category-group {
+            margin-bottom: 8px;
+        }
+
+        .skill-category-title {
+            font-size: 10px;
+            color: var(--accent-blue);
+            padding: 4px 0;
+            border-bottom: 1px dashed var(--border-color);
+            margin-bottom: 4px;
+            font-weight: 500;
         }
 
         .skill-list {
             list-style: none;
+            padding: 0;
+            margin: 0;
         }
 
         .skill-item {
-            padding: 8px 12px;
-            margin-bottom: 2px;
-            border-radius: 6px;
+            padding: 5px 8px;
+            margin-bottom: 1px;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.15s ease;
             display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
+            flex-direction: column;
+            gap: 2px;
         }
 
         .skill-item:hover {
@@ -228,9 +285,117 @@ TERMINAL_HTML = """
             color: var(--bg-primary);
         }
 
+        .skill-item.hidden {
+            display: none;
+        }
+
+        .skill-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .skill-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .skill-item.active .skill-desc {
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Connection Section - Bottom */
+        .sidebar-connection {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            flex-shrink: 0;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .connection-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-yellow);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .connection-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            font-size: 11px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .connection-item:last-child {
+            border-bottom: none;
+        }
+
+        .connection-label {
+            color: var(--text-muted);
+        }
+
+        .connection-value {
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: right;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 0;
+            margin-top: 4px;
+        }
+
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .connection-dot.connected {
+            background: var(--accent-green);
+        }
+
+        .connection-dot.error {
+            background: var(--accent-red);
+        }
+
+        .connection-status-text {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .connection-dot.connected + .connection-status-text {
+            color: var(--accent-green);
+        }
+
+        .connection-dot.error + .connection-status-text {
+            color: var(--accent-red);
+        }
+
         .skill-icon {
-            width: 16px;
+            width: 14px;
             text-align: center;
+            font-size: 10px;
         }
 
         .skill-category {
@@ -257,6 +422,7 @@ TERMINAL_HTML = """
             overflow-y: auto;
             font-family: 'JetBrains Mono', monospace;
             font-size: 14px;
+            position: relative;
         }
 
         .output-container::-webkit-scrollbar {
@@ -276,13 +442,178 @@ TERMINAL_HTML = """
             background: var(--text-muted);
         }
 
-        /* Banner */
+        /* Banner - 更紧凑 */
         .banner-container {
-            background: linear-gradient(135deg, rgba(63, 185, 80, 0.1) 0%, rgba(88, 166, 255, 0.1) 100%);
+            background: linear-gradient(135deg, rgba(63, 185, 80, 0.08) 0%, rgba(88, 166, 255, 0.08) 100%);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .banner-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent-green);
+        }
+
+        .banner-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .banner-version {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--accent-purple);
+            padding: 2px 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        /* Output Controls - 整合到输入区域上方 */
+        .output-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 11px;
+        }
+
+        .output-stats {
+            color: var(--text-muted);
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .output-btn {
+            padding: 3px 8px;
+            font-size: 10px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .output-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .output-btn.active {
+            background: rgba(63, 185, 80, 0.2);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 50;
+            transition: all 0.15s ease;
+            font-size: 14px;
+        }
+
+        .scroll-to-top.show {
+            display: flex;
+        }
+
+        .scroll-to-top:hover {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+        }
+
+        /* Collapsible Output Block */
+        .result-block {
+            margin: 12px 0;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .result-block.collapsed .result-content {
+            display: none;
+        }
+
+        .result-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .result-block.collapsed .result-block-header {
+            border-radius: 4px;
+        }
+
+        .result-block-title {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .result-block-toggle {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .result-content {
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Table with max height and scroll */
+        .result-table-wrapper {
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .result-table-wrapper.expanded {
+            max-height: none;
+        }
+
+        .table-expand-btn {
+            padding: 5px 10px;
+            font-size: 10px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            color: var(--accent-blue);
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .table-expand-btn:hover {
+            background: var(--bg-tertiary);
+        }
             text-align: center;
         }
 
@@ -529,84 +860,213 @@ TERMINAL_HTML = """
         .status-warning { color: var(--accent-yellow); }
         .status-critical { color: var(--accent-red); }
 
-        /* dbtop Container */
+        /* dbtop Container - 紧凑版 */
         .dbtop-container {
             background: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 6px;
+            padding: 8px;
             border: 1px solid var(--border-color);
+            font-size: 12px;
         }
 
         .dbtop-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 4px 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            margin-bottom: 6px;
         }
 
         .dbtop-title {
-            font-size: 16px;
+            font-size: 12px;
             font-weight: 600;
-            color: var(--accent-blue);
+            color: var(--accent-green);
         }
 
         .dbtop-time {
             font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
             color: var(--text-muted);
         }
 
-        .dbtop-summary {
+        /* DB Activity - 单行紧凑 */
+        .dbtop-db-activity {
             display: flex;
+            align-items: center;
             gap: 16px;
-            margin-bottom: 16px;
-            padding: 12px;
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-        }
-
-        .dbtop-summary-item {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .dbtop-summary-item .label {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .dbtop-summary-item .value {
+            padding: 6px 8px;
+            background: rgba(63, 185, 80, 0.05);
+            border-radius: 4px;
+            margin-bottom: 4px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
+            font-size: 11px;
+        }
+
+        .dbtop-activity-title {
+            color: var(--accent-yellow);
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        .dbtop-activity-values {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .dbtop-activity-item {
+            display: flex;
+            gap: 3px;
+        }
+
+        .dbtop-label {
+            color: var(--text-muted);
+            font-size: 10px;
+        }
+
+        .dbtop-value {
             color: var(--accent-green);
             font-weight: 600;
         }
 
-        .dbtop-section-title {
-            font-size: 12px;
-            font-weight: 600;
+        .dbtop-value.warning {
+            color: var(--accent-yellow);
+        }
+
+        .dbtop-value.success {
+            color: var(--accent-green);
+        }
+
+        /* Session States - 单行 */
+        .dbtop-states {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .dbtop-states-label {
             color: var(--accent-blue);
-            margin: 12px 0 8px 0;
-            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .dbtop-states-value {
+            color: var(--text-primary);
+        }
+
+        .dbtop-states-active {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .dbtop-states-idle {
+            color: var(--text-muted);
+        }
+
+        .dbtop-states-idle-tx {
+            color: var(--accent-yellow);
+            font-weight: 600;
+        }
+
+        /* Wait Events - 单行 */
+        .dbtop-wait-events {
+            padding: 4px 8px;
+            font-size: 10px;
+            color: var(--text-muted);
+            border-top: 1px dashed var(--border-color);
+            margin-top: 4px;
+        }
+
+        .wait-event-item {
+            color: var(--accent-yellow);
+            font-weight: 500;
+        }
+
+        /* dbtop compact table */
+        .dbtop-table-wrapper {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 4px 0;
+        }
+
+        .dbtop-table {
+            width: 100%;
+            font-size: 10px;
+            border-collapse: collapse;
+        }
+
+        .dbtop-table th {
+            background: var(--bg-tertiary);
+            padding: 3px 6px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--accent-green);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 10px;
+        }
+
+        .dbtop-table td {
+            padding: 2px 6px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 10px;
+        }
+
+        .dbtop-table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        .dbtop-table .query-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .state-active {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .state-idle-tx {
+            color: var(--accent-yellow);
+            font-weight: 600;
         }
 
         .dbtop-footer {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-muted);
-            margin-top: 12px;
+            padding: 4px 8px;
             text-align: right;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .query-cell {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .state-active {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .state-idle-tx {
+            color: var(--accent-yellow);
+            font-weight: 600;
         }
 
         /* Input Container */
         .input-container {
             background: var(--bg-secondary);
             border-top: 1px solid var(--border-color);
-            padding: 16px 20px;
+            padding: 0;
             display: flex;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
         }
 
         .input-wrapper {
@@ -614,15 +1074,14 @@ TERMINAL_HTML = """
             display: flex;
             align-items: center;
             background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px 16px;
+            border: 1px solid transparent;
+            padding: 10px 16px;
             transition: all 0.15s ease;
         }
 
         .input-wrapper:focus-within {
             border-color: var(--accent-green);
-            box-shadow: 0 0 0 3px rgba(63, 185, 80, 0.1);
+            background: rgba(63, 185, 80, 0.05);
         }
 
         .input-prompt {
@@ -727,61 +1186,270 @@ TERMINAL_HTML = """
 
     <main class="main-container">
         <aside class="sidebar">
-            <div class="sidebar-title">诊断技能</div>
-            <ul class="skill-list" id="skill-list">
-                <li class="skill-item" data-command="/health">
-                    <span class="skill-icon">🔍</span>
-                    <span>/health</span>
-                </li>
-                <li class="skill-item" data-command="/sessions">
-                    <span class="skill-icon">👥</span>
-                    <span>/sessions</span>
-                </li>
-                <li class="skill-item" data-command="/locks">
-                    <span class="skill-icon">🔒</span>
-                    <span>/locks</span>
-                </li>
-                <li class="skill-item" data-command="/space">
-                    <span class="skill-icon">📊</span>
-                    <span>/space</span>
-                </li>
-                <li class="skill-item" data-command="/slowsql">
-                    <span class="skill-icon">⚡</span>
-                    <span>/slowsql</span>
-                </li>
-                <li class="skill-item" data-command="/topsql">
-                    <span class="skill-icon">📈</span>
-                    <span>/topsql</span>
-                </li>
-                <li class="skill-item" data-command="/vacuum">
-                    <span class="skill-icon">🧹</span>
-                    <span>/vacuum</span>
-                </li>
-                <li class="skill-item" data-command="/waits">
-                    <span class="skill-icon">⏳</span>
-                    <span>/waits</span>
-                </li>
-                <div class="skill-category">更多命令见 /help</div>
-            </ul>
+            <!-- Skills Section - Top -->
+            <div class="sidebar-skills">
+                <div class="sidebar-section-title">📚 诊断技能</div>
+                <div class="skill-search-container">
+                    <input type="text" class="skill-search" id="skill-search" placeholder="搜索技能..." />
+                </div>
+                <div class="skill-count" id="skill-count">36 个技能</div>
+
+                <!-- Monitor Category -->
+                <div class="skill-category-group" data-category="monitor">
+                    <div class="skill-category-title">📊 监控诊断</div>
+                    <ul class="skill-list" id="skill-list">
+                        <li class="skill-item" data-command="/health" data-search="健康 体检">
+                            <div class="skill-name">/health</div>
+                            <div class="skill-desc">全维度健康体检，检查连接、缓存、事务、死锁等</div>
+                        </li>
+                        <li class="skill-item" data-command="/dbtop" data-search="实时 性能 面板 top">
+                            <div class="skill-name">/dbtop</div>
+                            <div class="skill-desc">实时性能面板，类似pg_top</div>
+                        </li>
+                        <li class="skill-item" data-command="/sessions" data-search="会话 连接">
+                            <div class="skill-name">/sessions</div>
+                            <div class="skill-desc">显示所有数据库会话</div>
+                        </li>
+                        <li class="skill-item" data-command="/activesessions" data-search="活跃 会话">
+                            <div class="skill-name">/activesessions</div>
+                            <div class="skill-desc">显示活跃的数据库会话</div>
+                        </li>
+                        <li class="skill-item" data-command="/waits" data-search="等待 事件">
+                            <div class="skill-name">/waits</div>
+                            <div class="skill-desc">显示等待事件统计</div>
+                        </li>
+                        <li class="skill-item" data-command="/locks" data-search="锁 阻塞">
+                            <div class="skill-name">/locks</div>
+                            <div class="skill-desc">显示所有锁信息</div>
+                        </li>
+                        <li class="skill-item" data-command="/blocked" data-search="阻塞 锁">
+                            <div class="skill-name">/blocked</div>
+                            <div class="skill-desc">显示被阻塞的锁</div>
+                        </li>
+                        <li class="skill-item" data-command="/blocktree" data-search="阻塞 链 树">
+                            <div class="skill-name">/blocktree</div>
+                            <div class="skill-desc">显示锁阻塞链树状结构</div>
+                        </li>
+                        <li class="skill-item" data-command="/longtx" data-search="长 事务">
+                            <div class="skill-name">/longtx</div>
+                            <div class="skill-desc">显示超过60秒的长事务</div>
+                        </li>
+                        <li class="skill-item" data-command="/idletx" data-search="idle 事务">
+                            <div class="skill-name">/idletx</div>
+                            <div class="skill-desc">显示idle in transaction会话</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Space Category -->
+                <div class="skill-category-group" data-category="space">
+                    <div class="skill-category-title">💾 空间分析</div>
+                    <ul class="skill-list">
+                        <li class="skill-item" data-command="/space" data-search="空间 大小">
+                            <div class="skill-name">/space</div>
+                            <div class="skill-desc">显示数据库空间使用</div>
+                        </li>
+                        <li class="skill-item" data-command="/tablesizes" data-search="表 大小">
+                            <div class="skill-name">/tablesizes</div>
+                            <div class="skill-desc">显示大表空间占用</div>
+                        </li>
+                        <li class="skill-item" data-command="/indexsizes" data-search="索引 大小">
+                            <div class="skill-name">/indexsizes</div>
+                            <div class="skill-desc">显示索引空间占用</div>
+                        </li>
+                        <li class="skill-item" data-command="/bloat" data-search="膨胀">
+                            <div class="skill-name">/bloat</div>
+                            <div class="skill-desc">检测表和索引膨胀</div>
+                        </li>
+                        <li class="skill-item" data-command="/unusedindexes" data-search="未使用 索引">
+                            <div class="skill-name">/unusedindexes</div>
+                            <div class="skill-desc">显示未使用的索引</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- PostgreSQL Category -->
+                <div class="skill-category-group" data-category="pg">
+                    <div class="skill-category-title">🐘 PostgreSQL</div>
+                    <ul class="skill-list">
+                        <li class="skill-item" data-command="/vacuum" data-search="vacuum 清理">
+                            <div class="skill-name">/vacuum</div>
+                            <div class="skill-desc">显示Vacuum状态和需要清理的表</div>
+                        </li>
+                        <li class="skill-item" data-command="/wal" data-search="wal 日志">
+                            <div class="skill-name">/wal</div>
+                            <div class="skill-desc">显示WAL日志状态</div>
+                        </li>
+                        <li class="skill-item" data-command="/replication" data-search="复制 主从">
+                            <div class="skill-name">/replication</div>
+                            <div class="skill-desc">显示复制状态</div>
+                        </li>
+                        <li class="skill-item" data-command="/slots" data-search="复制 槽">
+                            <div class="skill-name">/slots</div>
+                            <div class="skill-desc">显示复制槽状态</div>
+                        </li>
+                        <li class="skill-item" data-command="/xid" data-search="xid 事务 wraparound">
+                            <div class="skill-name">/xid</div>
+                            <div class="skill-desc">显示事务ID使用情况(wraparound监控)</div>
+                        </li>
+                        <li class="skill-item" data-command="/buffers" data-search="缓存 命中">
+                            <div class="skill-name">/buffers</div>
+                            <div class="skill-desc">显示缓存命中率统计</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- SQL Category -->
+                <div class="skill-category-group" data-category="sql">
+                    <div class="skill-category-title">📝 SQL 分析</div>
+                    <ul class="skill-list">
+                        <li class="skill-item" data-command="/slowsql" data-search="慢 sql">
+                            <div class="skill-name">/slowsql</div>
+                            <div class="skill-desc">查找慢SQL(需pg_stat_statements)</div>
+                        </li>
+                        <li class="skill-item" data-command="/topsql" data-search="top sql 耗时">
+                            <div class="skill-name">/topsql</div>
+                            <div class="skill-desc">显示总耗时最高的SQL</div>
+                        </li>
+                        <li class="skill-item" data-command="/topsqlcalls" data-search="top sql 调用">
+                            <div class="skill-name">/topsqlcalls</div>
+                            <div class="skill-desc">显示调用次数最高的SQL</div>
+                        </li>
+                        <li class="skill-item" data-command="/explain" data-search="执行计划">
+                            <div class="skill-name">/explain</div>
+                            <div class="skill-desc">显示SQL执行计划</div>
+                        </li>
+                        <li class="skill-item" data-command="/sql" data-search="执行 sql">
+                            <div class="skill-name">/sql</div>
+                            <div class="skill-desc">执行自定义SQL语句</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Management Category -->
+                <div class="skill-category-group" data-category="manage">
+                    <div class="skill-category-title">🔧 管理</div>
+                    <ul class="skill-list">
+                        <li class="skill-item" data-command="/kill" data-search="终止 会话">
+                            <div class="skill-name">/kill</div>
+                            <div class="skill-desc">终止数据库会话</div>
+                        </li>
+                        <li class="skill-item" data-command="/params" data-search="参数 配置">
+                            <div class="skill-name">/params</div>
+                            <div class="skill-desc">搜索和显示数据库参数</div>
+                        </li>
+                        <li class="skill-item" data-command="/memory" data-search="内存 参数">
+                            <div class="skill-name">/memory</div>
+                            <div class="skill-desc">显示内存相关参数</div>
+                        </li>
+                        <li class="skill-item" data-command="/users" data-search="用户">
+                            <div class="skill-name">/users</div>
+                            <div class="skill-desc">显示数据库用户</div>
+                        </li>
+                        <li class="skill-item" data-command="/tableinfo" data-search="表 结构">
+                            <div class="skill-name">/tableinfo</div>
+                            <div class="skill-desc">显示表结构信息</div>
+                        </li>
+                        <li class="skill-item" data-command="/tableindexes" data-search="表 索引">
+                            <div class="skill-name">/tableindexes</div>
+                            <div class="skill-desc">显示表的索引信息</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- AI Category -->
+                <div class="skill-category-group" data-category="ai">
+                    <div class="skill-category-title">🤖 AI 诊断</div>
+                    <ul class="skill-list">
+                        <li class="skill-item" data-command="/llm" data-search="llm 智能 诊断">
+                            <div class="skill-name">/llm</div>
+                            <div class="skill-desc">使用LLM进行智能诊断</div>
+                        </li>
+                        <li class="skill-item" data-command="/model" data-search="模型 llm">
+                            <div class="skill-name">/model</div>
+                            <div class="skill-desc">切换或显示LLM模型</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- System Category -->
+                <div class="skill-category-group" data-category="system">
+                    <div class="skill-category-title">⚙️ 系统</div>
+                    <ul class="skill-list">
+                        <li class="skill-item" data-command="/help" data-search="帮助">
+                            <div class="skill-name">/help</div>
+                            <div class="skill-desc">显示所有可用命令</div>
+                        </li>
+                        <li class="skill-item" data-command="/exit" data-search="退出">
+                            <div class="skill-name">/exit</div>
+                            <div class="skill-desc">退出程序</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Connection Section - Bottom -->
+            <div class="sidebar-connection">
+                <div class="connection-title">🔗 数据库连接</div>
+                <div class="connection-item">
+                    <span class="connection-label">Host</span>
+                    <span class="connection-value" id="conn-host">-</span>
+                </div>
+                <div class="connection-item">
+                    <span class="connection-label">Port</span>
+                    <span class="connection-value" id="conn-port">-</span>
+                </div>
+                <div class="connection-item">
+                    <span class="connection-label">Database</span>
+                    <span class="connection-value" id="conn-database">-</span>
+                </div>
+                <div class="connection-item">
+                    <span class="connection-label">User</span>
+                    <span class="connection-value" id="conn-user">-</span>
+                </div>
+                <div class="connection-item">
+                    <span class="connection-label">Version</span>
+                    <span class="connection-value" id="conn-version">-</span>
+                </div>
+                <div class="connection-status">
+                    <div class="connection-dot" id="conn-dot"></div>
+                    <span class="connection-status-text" id="conn-status-text">连接中...</span>
+                </div>
+            </div>
         </aside>
 
         <div class="terminal-area">
             <div class="output-container" id="output">
                 <div class="banner-container">
                     <div class="banner-logo">SWAT SKILL</div>
-                    <div class="banner-title">PostgreSQL 智能诊断 Agent</div>
-                    <div class="banner-version">v1.6.0</div>
+                    <div class="banner-title">PostgreSQL 智能诊断</div>
+                    <div class="banner-version">v1.9.4</div>
                 </div>
             </div>
 
+            <!-- Scroll to top button -->
+            <div class="scroll-to-top" id="scroll-to-top" title="返回顶部">
+                ↑
+            </div>
+
             <div class="input-container">
+                <!-- Output controls toolbar -->
+                <div class="output-controls">
+                    <div class="output-stats">
+                        <span id="output-count">0 个输出</span>
+                    </div>
+                    <div class="output-actions">
+                        <button class="output-btn active" id="auto-scroll-btn" title="自动滚动到底部">滚动</button>
+                        <button class="output-btn" id="collapse-all-btn" title="折叠所有输出">折叠</button>
+                        <button class="output-btn" id="expand-all-btn" title="展开所有输出">展开</button>
+                        <button class="output-btn" id="clear-btn" title="清空输出">清屏</button>
+                        <button class="output-btn" id="help-btn" title="显示帮助">帮助</button>
+                    </div>
+                </div>
+
                 <div class="input-wrapper">
                     <span class="input-prompt">swat_skill&gt;</span>
                     <input type="text" id="command-input" placeholder="输入命令或 SQL..." autofocus autocomplete="off" spellcheck="false">
-                </div>
-                <div class="input-actions">
-                    <button class="action-btn" id="clear-btn">清屏</button>
-                    <button class="action-btn" id="help-btn">帮助</button>
                 </div>
             </div>
         </div>
@@ -792,15 +1460,26 @@ TERMINAL_HTML = """
         const inputEl = document.getElementById('command-input');
         const statusEl = document.getElementById('connection-status');
         const badgeEl = document.getElementById('connection-badge');
-        const skillListEl = document.getElementById('skill-list');
+        const skillListEl = document.querySelector('.sidebar-skills');  // Use parent container for all skill items
         const clearBtn = document.getElementById('clear-btn');
         const helpBtn = document.getElementById('help-btn');
+        const autoScrollBtn = document.getElementById('auto-scroll-btn');
+        const collapseAllBtn = document.getElementById('collapse-all-btn');
+        const expandAllBtn = document.getElementById('expand-all-btn');
+        const scrollToTopBtn = document.getElementById('scroll-to-top');
+        const outputCountEl = document.getElementById('output-count');
 
         let ws = null;
         let sessionId = null;
         let commandHistory = [];
         let historyIndex = -1;
         let skillNames = [];
+        let outputBlockCount = 0;
+        let autoScroll = true;  // Auto scroll to bottom by default
+        let MAX_OUTPUT_BLOCKS = 50;  // Max output blocks before warning
+
+        // Initialize auto-scroll button
+        autoScrollBtn.classList.add('active');
 
         // Skill list click handler
         skillListEl.addEventListener('click', (e) => {
@@ -809,16 +1488,87 @@ TERMINAL_HTML = """
                 const command = item.dataset.command;
                 inputEl.value = command;
                 inputEl.focus();
+                // Mark active
+                document.querySelectorAll('.skill-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
             }
+        });
+
+        // Skill search functionality
+        const skillSearchEl = document.getElementById('skill-search');
+        const skillCountEl = document.getElementById('skill-count');
+
+        skillSearchEl.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const items = document.querySelectorAll('.skill-item');
+            const categories = document.querySelectorAll('.skill-category-group');
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const command = item.dataset.command.toLowerCase();
+                const searchTerms = (item.dataset.search || '').toLowerCase();
+                const desc = item.querySelector('.skill-desc')?.textContent.toLowerCase() || '';
+
+                const matches = query === '' ||
+                    command.includes(query) ||
+                    searchTerms.includes(query) ||
+                    desc.includes(query);
+
+                if (matches) {
+                    item.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            // Show/hide categories based on visible items
+            categories.forEach(cat => {
+                const visibleItems = cat.querySelectorAll('.skill-item:not(.hidden)');
+                if (visibleItems.length === 0) {
+                    cat.style.display = 'none';
+                } else {
+                    cat.style.display = 'block';
+                }
+            });
+
+            skillCountEl.textContent = `${visibleCount} 个技能`;
+        });
+
+        // Auto scroll toggle
+        autoScrollBtn.addEventListener('click', () => {
+            autoScroll = !autoScroll;
+            autoScrollBtn.classList.toggle('active', autoScroll);
+            if (autoScroll) {
+                scrollToBottom();
+            }
+        });
+
+        // Collapse all output blocks
+        collapseAllBtn.addEventListener('click', () => {
+            document.querySelectorAll('.result-block.collapsible').forEach(block => {
+                block.classList.add('collapsed');
+                block.querySelector('.result-block-toggle').textContent = '展开';
+            });
+        });
+
+        // Expand all output blocks
+        expandAllBtn.addEventListener('click', () => {
+            document.querySelectorAll('.result-block.collapsible').forEach(block => {
+                block.classList.remove('collapsed');
+                block.querySelector('.result-block-toggle').textContent = '折叠';
+            });
         });
 
         // Clear button
         clearBtn.addEventListener('click', () => {
+            outputBlockCount = 0;
+            updateOutputCount();
             outputEl.innerHTML = `
                 <div class="banner-container">
                     <div class="banner-logo">SWAT SKILL</div>
-                    <div class="banner-title">PostgreSQL 智能诊断 Agent</div>
-                    <div class="banner-version">v1.6.0</div>
+                    <div class="banner-title">PostgreSQL 智能诊断</div>
+                    <div class="banner-version">v1.9.4</div>
                 </div>
             `;
         });
@@ -827,6 +1577,63 @@ TERMINAL_HTML = """
         helpBtn.addEventListener('click', () => {
             sendCommand('/help');
         });
+
+        // Scroll to top button visibility
+        outputEl.addEventListener('scroll', () => {
+            if (outputEl.scrollTop > 200) {
+                scrollToTopBtn.classList.add('show');
+            } else {
+                scrollToTopBtn.classList.remove('show');
+            }
+        });
+
+        // Scroll to top action
+        scrollToTopBtn.addEventListener('click', () => {
+            outputEl.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Update output count
+        function updateOutputCount() {
+            const countEl = document.getElementById('output-count');
+            if (countEl) {
+                countEl.textContent = `${outputBlockCount} 个输出`;
+                if (outputBlockCount >= MAX_OUTPUT_BLOCKS) {
+                    countEl.style.color = 'var(--accent-yellow)';
+                } else {
+                    countEl.style.color = '';
+                }
+            }
+        }
+
+        // Add collapsible block header
+        function createCollapsibleBlock(title) {
+            const block = document.createElement('div');
+            block.className = 'result-block collapsible';
+            block.dataset.index = outputBlockCount;
+
+            const header = document.createElement('div');
+            header.className = 'result-block-header';
+            header.innerHTML = `
+                <span class="result-block-title">${title}</span>
+                <span class="result-block-toggle">折叠</span>
+            `;
+            header.addEventListener('click', () => {
+                block.classList.toggle('collapsed');
+                const toggle = block.querySelector('.result-block-toggle');
+                toggle.textContent = block.classList.contains('collapsed') ? '展开' : '折叠';
+            });
+
+            const content = document.createElement('div');
+            content.className = 'result-content';
+
+            block.appendChild(header);
+            block.appendChild(content);
+
+            outputBlockCount++;
+            updateOutputCount();
+
+            return { block, content };
+        }
 
         function connect() {
             const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -845,12 +1652,18 @@ TERMINAL_HTML = """
             ws.onerror = () => {
                 statusEl.textContent = '连接错误';
                 badgeEl.className = 'connection-badge error';
+                // Update sidebar connection status
+                document.getElementById('conn-dot').className = 'connection-dot error';
+                document.getElementById('conn-status-text').textContent = '连接错误';
                 appendLine('WebSocket 连接错误', 'error');
             };
 
             ws.onclose = () => {
                 statusEl.textContent = '已断开';
                 badgeEl.className = 'connection-badge error';
+                // Update sidebar connection status
+                document.getElementById('conn-dot').className = 'connection-dot error';
+                document.getElementById('conn-status-text').textContent = '已断开';
                 appendLine('连接已关闭', 'warning');
             };
         }
@@ -860,9 +1673,36 @@ TERMINAL_HTML = """
                 case 'connected':
                     sessionId = result.session_id;
                     skillNames = result.skill_names || [];
+
+                    // Update connection info in sidebar
+                    const connDot = document.getElementById('conn-dot');
+                    const connStatusText = document.getElementById('conn-status-text');
+
+                    if (result.db_config) {
+                        document.getElementById('conn-host').textContent = result.db_config.host || '-';
+                        document.getElementById('conn-port').textContent = result.db_config.port || '-';
+                        document.getElementById('conn-database').textContent = result.db_config.database || '-';
+                        document.getElementById('conn-user').textContent = result.db_config.user || '-';
+                    }
+
                     if (result.server_info && result.server_info.success) {
                         const info = result.server_info.info;
-                        appendLine(`✓ 已连接到 PostgreSQL ${info.version || 'Unknown'}`, 'success');
+                        // Extract PostgreSQL version (e.g., "PostgreSQL 15.3")
+                        const versionMatch = (info.version || '').match(/PostgreSQL\s+[\d.]+/i);
+                        const version = versionMatch ? versionMatch[0] : 'PostgreSQL';
+                        document.getElementById('conn-version').textContent = version;
+
+                        // Update connection status
+                        connDot.className = 'connection-dot connected';
+                        connStatusText.textContent = '已连接';
+
+                        appendLine(`✓ 已连接到 ${version}`, 'success');
+                        addSeparator();
+                    } else {
+                        connDot.className = 'connection-dot error';
+                        connStatusText.textContent = '连接失败';
+                        document.getElementById('conn-version').textContent = '-';
+                        appendLine('✗ 数据库连接失败', 'error');
                         addSeparator();
                     }
                     break;
@@ -901,6 +1741,19 @@ TERMINAL_HTML = """
                         addSeparator();
                     }
                     break;
+                case 'dbtop_start':
+                    // Clear output and show dbtop container for streaming updates
+                    clearDbtopContainer();
+                    appendLine(result.message, 'info');
+                    break;
+                case 'dbtop_update':
+                    // Real-time streaming update - update the dbtop display
+                    renderDbtopStreaming(result);
+                    break;
+                case 'dbtop_end':
+                    appendLine(result.message, 'success');
+                    addSeparator();
+                    break;
                 case 'dbtop':
                     renderDbtop(result);
                     break;
@@ -912,6 +1765,134 @@ TERMINAL_HTML = """
             }
         }
 
+        // dbtop streaming container reference
+        let dbtopStreamingContainer = null;
+
+        function clearDbtopContainer() {
+            // Remove any existing streaming dbtop container
+            if (dbtopStreamingContainer) {
+                dbtopStreamingContainer.remove();
+                dbtopStreamingContainer = null;
+            }
+        }
+
+        function renderDbtopStreaming(result) {
+            // Create or update streaming dbtop display
+            if (!dbtopStreamingContainer) {
+                dbtopStreamingContainer = document.createElement('div');
+                dbtopStreamingContainer.className = 'result-block';
+                outputEl.appendChild(dbtopStreamingContainer);
+            }
+
+            const data = result.data;
+            const iteration = result.iteration;
+            const total = result.total_iterations;
+
+            // Build dbtop content
+            dbtopStreamingContainer.innerHTML = buildDbtopHtml(data, iteration, total);
+            scrollToBottom();
+        }
+
+        function buildDbtopHtml(data, iteration, total) {
+            const db_activity = data.db_activity || {};
+            const session_states = data.session_states || {};
+            const sessions = data.sessions || [];
+            const wait_events = data.wait_events || [];
+
+            // Limit sessions to display (max 8 for compact view)
+            const displaySessions = sessions.slice(0, 8);
+            const hasMoreSessions = sessions.length > 8;
+
+            let html = `
+                <div class="dbtop-container">
+                    <!-- Header: Title + Time + Iteration -->
+                    <div class="dbtop-header">
+                        <span class="dbtop-title">📊 dbtop</span>
+                        <span class="dbtop-time">${data.timestamp || ''} | ${iteration}/${total}</span>
+                    </div>
+
+                    <!-- DB Activity: Single line metrics -->
+                    <div class="dbtop-db-activity">
+                        <span class="dbtop-activity-title">DB:</span>
+                        <span class="dbtop-activity-item"><span class="dbtop-label">tps</span><span class="dbtop-value ${db_activity.tps > 100 ? 'warning' : ''}">${db_activity.tps || 0}</span></span>
+                        <span class="dbtop-activity-item"><span class="dbtop-label">rb/s</span><span class="dbtop-value ${db_activity.rollbacks_ps > 0 ? 'warning' : ''}">${db_activity.rollbacks_ps || 0}</span></span>
+                        <span class="dbtop-activity-item"><span class="dbtop-label">buf/s</span><span class="dbtop-value">${db_activity.buffer_reads_ps || 0}</span></span>
+                        <span class="dbtop-activity-item"><span class="dbtop-label">hit%</span><span class="dbtop-value ${db_activity.buffer_hit_pct >= 90 ? 'success' : db_activity.buffer_hit_pct >= 70 ? '' : 'warning'}">${db_activity.buffer_hit_pct || 0}</span></span>
+                        <span class="dbtop-activity-item"><span class="dbtop-label">r/s</span><span class="dbtop-value">${db_activity.row_reads_ps || 0}</span></span>
+                        <span class="dbtop-activity-item"><span class="dbtop-label">w/s</span><span class="dbtop-value">${db_activity.row_writes_ps || 0}</span></span>
+                    </div>
+
+                    <!-- Session States: Single line -->
+                    <div class="dbtop-states">
+                        <span class="dbtop-states-label">Sessions:</span>
+                        <span class="dbtop-states-value">${session_states.total || 0}</span>
+                        <span class="dbtop-states-active">${session_states.active || 0} active</span>
+                        <span class="dbtop-states-idle">${session_states.idle || 0} idle</span>
+                        ${session_states.idle_tx > 0 ? `<span class="dbtop-states-idle-tx">${session_states.idle_tx} idle_tx</span>` : ''}
+                    </div>
+            `;
+
+            // Sessions table - compact, max 8 rows
+            if (displaySessions.length > 0) {
+                html += `
+                    <div class="dbtop-table-wrapper">
+                        <table class="dbtop-table">
+                            <tr>
+                                <th style="width:50px">PID</th>
+                                <th style="width:80px">User</th>
+                                <th style="width:70px">State</th>
+                                <th style="width:50px">Dur</th>
+                                <th style="width:50px">Xact</th>
+                                <th style="width:80px">Wait</th>
+                                <th>Query</th>
+                            </tr>
+                `;
+                displaySessions.forEach(row => {
+                    const stateClass = row.State === 'active' ? 'state-active' :
+                                       row.State === 'idle in transaction' ? 'state-idle-tx' : '';
+                    // Shorten state name
+                    const shortState = row.State === 'idle in transaction' ? 'idle_tx' :
+                                       row.State === 'idle in transaction aborted' ? 'abort' :
+                                       row.State || '';
+                    html += `
+                        <tr>
+                            <td>${row.PID || ''}</td>
+                            <td>${(row.User || '').substring(0, 8)}</td>
+                            <td class="${stateClass}">${shortState.substring(0, 8)}</td>
+                            <td>${row.Duration || '-'}</td>
+                            <td>${row.Xact || '-'}</td>
+                            <td>${(row.Wait || '-').substring(0, 10)}</td>
+                            <td class="query-cell">${row.Query || ''}</td>
+                        </tr>
+                    `;
+                });
+                html += `</table></div>`;
+
+                if (hasMoreSessions) {
+                    html += `<div style="font-size:10px;color:var(--text-muted);padding:2px 8px">... 还有 ${sessions.length - 8} 个会话</div>`;
+                }
+            }
+
+            // Wait Events: Single line at bottom
+            if (wait_events.length > 0) {
+                html += `
+                    <div class="dbtop-wait-events">
+                        <span style="color:var(--accent-yellow)">Wait:</span>
+                        ${wait_events.slice(0, 5).map(e => `<span class="wait-event-item">${e.Event}(${e.Count})</span>`).join(' ')}
+                        ${wait_events.length > 5 ? `<span style="color:var(--text-muted)">+${wait_events.length - 5} more</span>` : ''}
+                    </div>
+                `;
+            }
+
+            // Uptime at bottom
+            if (data.uptime) {
+                html += `<div class="dbtop-footer">Up: ${data.uptime}</div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
         function renderTable(result) {
             if (!result.columns || !result.rows) {
                 appendLine('无数据', 'info');
@@ -919,8 +1900,17 @@ TERMINAL_HTML = """
                 return;
             }
 
-            const block = document.createElement('div');
-            block.className = 'result-block';
+            // Create collapsible block for large tables
+            const isLarge = result.row_count > 20;
+            const { block, content } = createCollapsibleBlock(
+                `表格结果 (${result.row_count} 行, ${result.execution_time.toFixed(3)}s)`
+            );
+
+            // Collapse large tables by default
+            if (isLarge) {
+                block.classList.add('collapsed');
+                block.querySelector('.result-block-toggle').textContent = '展开';
+            }
 
             const wrapper = document.createElement('div');
             wrapper.className = 'result-table-wrapper';
@@ -936,8 +1926,9 @@ TERMINAL_HTML = """
                 headerRow.appendChild(th);
             });
 
-            // Rows
-            result.rows.forEach(row => {
+            // Rows - limit display for large tables
+            const displayRows = isLarge ? result.rows.slice(0, 20) : result.rows;
+            displayRows.forEach(row => {
                 const tr = table.insertRow();
                 result.columns.forEach(col => {
                     const td = tr.insertCell();
@@ -947,7 +1938,33 @@ TERMINAL_HTML = """
             });
 
             wrapper.appendChild(table);
-            block.appendChild(wrapper);
+            content.appendChild(wrapper);
+
+            // Add expand button for large tables
+            if (isLarge) {
+                const expandBtn = document.createElement('div');
+                expandBtn.className = 'table-expand-btn';
+                expandBtn.textContent = `点击展开查看全部 ${result.row_count} 行 (当前显示前 20 行)`;
+                expandBtn.addEventListener('click', () => {
+                    wrapper.classList.toggle('expanded');
+                    if (wrapper.classList.contains('expanded')) {
+                        // Add remaining rows
+                        const remainingRows = result.rows.slice(20);
+                        remainingRows.forEach(row => {
+                            const tr = table.insertRow();
+                            result.columns.forEach(col => {
+                                const td = tr.insertCell();
+                                const value = row[col];
+                                td.textContent = value !== null && value !== undefined ? String(value) : '';
+                            });
+                        });
+                        expandBtn.textContent = '折叠表格';
+                    } else {
+                        expandBtn.textContent = `点击展开查看全部 ${result.row_count} 行`;
+                    }
+                });
+                content.appendChild(expandBtn);
+            }
 
             // Row count footer
             const footer = document.createElement('div');
@@ -956,7 +1973,7 @@ TERMINAL_HTML = """
                 <span>${result.row_count} 行结果</span>
                 <span class="execution-time">${result.execution_time.toFixed(3)}s</span>
             `;
-            block.appendChild(footer);
+            content.appendChild(footer);
 
             outputEl.appendChild(block);
             addSeparator();
@@ -964,8 +1981,9 @@ TERMINAL_HTML = """
         }
 
         function renderHealth(result) {
-            const block = document.createElement('div');
-            block.className = 'result-block';
+            const { block, content } = createCollapsibleBlock(
+                `健康报告 (${result.overall === 'ok' ? '✓ 健康' : result.overall === 'warning' ? '⚠ 警告' : '✗ 异常'})`
+            );
 
             const container = document.createElement('div');
             container.className = 'health-container';
@@ -1017,7 +2035,7 @@ TERMINAL_HTML = """
                 container.appendChild(itemsDiv);
             }
 
-            block.appendChild(container);
+            content.appendChild(container);
             outputEl.appendChild(block);
             addSeparator();
             scrollToBottom();
@@ -1177,7 +2195,9 @@ TERMINAL_HTML = """
         }
 
         function scrollToBottom() {
-            outputEl.scrollTop = outputEl.scrollHeight;
+            if (autoScroll) {
+                outputEl.scrollTop = outputEl.scrollHeight;
+            }
         }
 
         function sendCommand(command) {
@@ -1186,11 +2206,16 @@ TERMINAL_HTML = """
                 return;
             }
 
-            // Show command in output
-            const cmdDiv = document.createElement('div');
-            cmdDiv.className = 'output-line command';
-            cmdDiv.innerHTML = `<span class="prompt">swat_skill&gt;</span> ${command}`;
-            outputEl.appendChild(cmdDiv);
+            // Show command in output with timestamp
+            const cmdBlock = document.createElement('div');
+            cmdBlock.className = 'output-line command';
+            const timestamp = new Date().toLocaleTimeString();
+            cmdBlock.innerHTML = `
+                <span class="prompt">swat_skill&gt;</span>
+                <span style="color: var(--text-primary)">${command}</span>
+                <span style="color: var(--text-muted); font-size: 11px; margin-left: 8px">${timestamp}</span>
+            `;
+            outputEl.appendChild(cmdBlock);
 
             // Add to history
             if (command.trim()) {

@@ -1,5 +1,273 @@
 # Release Notes
 
+## v1.9.4 (2026-05-08)
+
+🔧 **版本更新与文档同步**
+
+- 版本号更新至 v1.9.4
+- 同步更新 README.md、RELEASE_NOTES.md 等文档
+- Web 界面 banner 版本号同步更新
+
+---
+
+## v1.9.3 (2026-05-07)
+
+📚 **左侧边栏优化**
+
+swat_skill v1.9.3 优化了 Web 界面左侧边栏，分为两个部分：
+
+### 📚 诊断技能区（上半部分）
+
+- **全量技能展示**: 36 个诊断技能完整展示
+- **分类组织**: 按功能分组（监控诊断、空间分析、PostgreSQL、SQL分析、管理、AI诊断、系统）
+- **搜索功能**: 支持按命令名、关键词、描述搜索技能
+- **技能计数**: 实时显示匹配的技能数量
+- **技能描述**: 每个技能显示详细说明
+
+### 🔗 数据库连接区（下半部分）
+
+- **连接参数**: 显示 Host、Port、Database、User
+- **版本信息**: 显示 PostgreSQL 版本
+- **连接状态**: 实时显示连接状态（已连接/连接错误/已断开）
+- **状态指示**: 使用颜色圆点指示连接状态
+
+### 🔧 技术改进
+
+- WebSocket 发送数据库配置信息到前端
+- JavaScript 实时更新连接状态显示
+- 搜索支持中文关键词匹配
+
+---
+
+## v1.9.2 (2026-05-07)
+
+📊 **dbtop 显示优化**
+
+swat_skill v1.9.2 优化了 `/dbtop` 命令的显示，使所有内容可以在一个页面内完整呈现。
+
+### 📊 紧凑布局改进
+
+- **Header**: 单行显示标题、时间戳、迭代次数
+- **DB Activity**: 单行显示关键指标（tps、rb/s、buf/s、hit%、r/s、w/s）
+- **Session States**: 单行显示会话状态统计（总数、active、idle、idle_tx）
+- **Sessions Table**: 最多显示 8 个会话，表格字体缩小至 10px
+- **Wait Events**: 单行显示等待事件汇总（最多 5 个）
+- **Footer**: 单行显示运行时长
+
+### 📊 CSS 优化
+
+- 字体大小统一缩小至 10-12px
+- 减少内边距和间距
+- 表格最大高度 200px，超出部分滚动
+- 查询列限制宽度 200px，超长文本省略
+
+---
+
+## v1.9.1 (2026-05-07)
+
+🎨 **Web 界面布局优化**
+
+- 将输出控制栏整合到输入区域上方，与界面融为一体
+- 缩小 Banner 尺寸，减少占用空间
+- 简化按钮文案：滚动、折叠、展开、清屏、帮助
+- 调整整体样式更紧凑统一
+
+---
+
+## v1.9.0 (2026-05-07)
+
+🎨 **Web 界面输出优化**
+
+swat_skill v1.9.0 优化了 Web 界面的输出显示，解决了输出内容过多时只能看到最后内容的问题。
+
+### 🎨 新增功能
+
+#### 输出控制栏
+- **输出计数器**: 显示当前输出块数量，超过 50 个时警告
+- **自动滚动开关**: 可选择是否自动滚动到底部（默认开启）
+- **折叠全部**: 一键折叠所有输出块
+- **展开全部**: 一键展开所有输出块
+- **清屏**: 清空所有输出
+
+#### 输出折叠功能
+- 每个输出块（表格、健康报告）都可以单独折叠/展开
+- 点击输出块标题栏即可折叠/展开
+- 大型表格（>20行）默认折叠，只显示前 20 行
+- 表格展开按钮：点击可查看全部数据
+
+#### 返回顶部按钮
+- 当滚动超过 200px 时，显示"↑"返回顶部按钮
+- 点击可平滑滚动返回顶部
+
+#### 表格高度限制
+- 表格最大高度 400px，超出部分自动滚动
+- 可点击展开按钮查看完整表格
+- 大型表格只加载前 20 行，展开时加载剩余数据
+
+### 🎨 CSS 新增样式
+- `.output-controls`: 输出控制栏样式
+- `.output-btn`: 输出控制按钮样式
+- `.scroll-to-top`: 返回顶部按钮样式
+- `.result-block.collapsible`: 可折叠输出块
+- `.result-block-header`: 输出块标题栏
+- `.table-expand-btn`: 表格展开按钮
+
+### 🎨 JavaScript 新增
+- `outputBlockCount`: 输出块计数器
+- `autoScroll`: 自动滚动开关（默认 true）
+- `createCollapsibleBlock()`: 创建可折叠输出块
+- `updateOutputCount()`: 更新输出计数显示
+
+### 🔧 其他改进
+- 命令显示添加时间戳
+- 输出块标题显示结果摘要（如表格行数、健康状态）
+
+---
+
+## v1.8.0 (2026-05-07)
+
+🌐 **Web 端 dbtop 实时动态刷新**
+
+swat_skill v1.8.0 实现了 Web 端 dbtop 的实时动态刷新功能，使其体验与 CLI 端一致。
+
+### 🌐 WebSocket 流式推送
+
+#### 新增消息类型
+- `dbtop_start`: 开始监控，显示参数信息
+- `dbtop_update`: 每次迭代的实时数据推送
+- `dbtop_end`: 监控结束通知
+
+#### 实现机制
+1. **WebSocket Handler 改造**:
+   - `handle_dbtop_streaming()`: 处理 dbtop 命令时启动流式推送
+   - `collect_dbtop_metrics()`: 收集当前指标数据
+   - `calculate_rates_from_snapshots()`: 计算速率指标
+   - `format_dbtop_for_web()`: 格式化数据
+
+2. **前端 JavaScript 改造**:
+   - 新增 `dbtopStreamingContainer`: 流式更新容器
+   - `handleResult()`: 处理新的消息类型
+   - `renderDbtopStreaming()`: 实时更新显示
+   - `buildDbtopHtml()`: 构建 pg_top 风格的 HTML
+
+3. **新增 CSS 样式**:
+   - `.dbtop-db-activity`: DB activity 区域
+   - `.dbtop-activity-values`: 速率指标显示
+   - `.dbtop-states`: 会话状态区域
+   - `.state-active`, `.state-idle-tx`: 状态颜色样式
+
+### 📊 显示效果
+
+Web 端 dbtop 现在显示格式与 CLI 端一致：
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ 📊 Database Top (pg_top 风格)          15:45:17  迭代: 3/10         │
+├──────────────────────────────────────────────────────────────────────┤
+│ DB activity:                                                          │
+│ tps 45.2  rollbs/s 0.1  buffer r/s 3  hit% 98%  row r/s 120  row w/s 5│
+├──────────────────────────────────────────────────────────────────────┤
+│ Sessions: 15 total: 3 active, 10 idle, 2 idle_tx                     │
+├──────────────────────────────────────────────────────────────────────┤
+│ 会话列表                                                               │
+│ PID | User | State | Duration | Xact | Wait | Query                 │
+│ ...                                                                  │
+├──────────────────────────────────────────────────────────────────────┤
+│ 服务器运行时间: 2d 3h                                                  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### 🔧 文件修改
+
+- `swat_skill/web/websocket.py`: 新增流式推送处理函数
+- `swat_skill/web/server.py`: 前端 JavaScript 和 CSS 更新
+- 版本更新为 1.8.0
+
+---
+
+## v1.7.0 (2026-05-07)
+
+📊 **dbtop 全面升级（基于 pg_top 源码深度研究）**
+
+swat_skill v1.7.0 通过深入研究 pg_top 源码，实现了真正类似 pg_top 的数据库监控显示。
+
+### 📊 pg_top 源码研究
+
+通过研究 pg_top 源码（display.c、pg_top.c、machine.h、m_common.c）：
+- **display.c**: 屏幕显示位置定义（layout.h）和 DB activity 显示格式
+- **pg_top.c**: 主循环和显示流程（do_display 函数）
+- **machine.h**: db_info 结构体定义（numXact, numRollback, numBlockRead 等）
+- **m_common.c**: get_database_info 函数，计算每秒速率的逻辑
+
+### 📊 关键发现
+
+pg_top 的核心特性：
+1. **DB activity 行**: `tps, rollbs/s, buffer r/s, hit%, row r/s, row w/s`
+2. **速率计算**: `(current - last) / time_diff` 计算每秒速率
+3. **累积统计**: 查询 `pg_stat_database` 获取累积计数器
+4. **时间差计算**: gettimeofday() 计算精确时间差
+
+### 📊 dbtop 新实现
+
+#### 新增查询
+- `db_stats_cumulative`: 获取累积数据库统计（xact_commit, xact_rollback, blks_read, blks_hit, tup_fetched 等）
+- `sessions_with_state`: 会话详细信息（包含事务持续时间 xact_duration_seconds）
+- `session_state_counts`: 会话状态统计（active, idle, idle_in_transaction 等）
+
+#### 数据结构
+```python
+DbStatsSnapshot:  # 累积统计快照
+    xact_commit, xact_rollback, blks_read, blks_hit...
+    timestamp
+
+DbActivityRates:  # 每秒速率
+    tps, rollbacks_ps, buffer_reads_ps, buffer_hit_pct
+    row_reads_ps, row_writes_ps, deadlocks_ps
+```
+
+#### 速率计算
+- 存储前一次累积统计快照
+- 计算当前值与前一值的差值
+- 除以时间差得到每秒速率
+- 首次迭代显示累积值，后续迭代显示速率
+
+#### 显示格式（CLI）
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ SWAT SKILL dbtop - PostgreSQL Monitor  Up: 2d 3h     15:45:17       │
+├──────────────────────────────────────────────────────────────────────┤
+│ DB activity: 45.2 tps, 0.1 rollbs/s, 3 buffer r/s, 98% hit,          │
+│              120 row r/s, 5 row w/s                                   │
+├──────────────────────────────────────────────────────────────────────┤
+│ Sessions: 15 total: 3 active, 10 idle, 2 idle_tx                     │
+├──────────────────────────────────────────────────────────────────────┤
+│  PID   USER    STATE    DURATION  XACT   WAIT       QUERY            │
+│ 23887  lcj     active   0.12s     5.3s   -          SELECT * FROM... │
+│ 23888  lcj     idle     2.34s     -      Cli:Read   INSERT INTO...   │
+│ 23889  lcj     idle_tx  1m 5s     1m 5s  -          BEGIN;          │
+├──────────────────────────────────────────────────────────────────────┤
+│ Wait Events: ClientRead(2), DataFileRead(1)                         │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+#### 新增列
+- **XACT**: 事务持续时间（从 xact_start 计算）
+- 状态颜色：active(绿)、idle(灰)、idle_tx(黄)、abort(红)
+- 持续时间颜色：>5分钟(红)、>1分钟(黄)、>10秒(蓝)
+
+#### Web 模式
+- `db_activity`: 每秒速率数据
+- `session_states`: 会话状态统计
+- 完整的会话表格数据
+
+### 📝 其他改进
+
+- 默认刷新间隔改为 2 秒（便于速率计算）
+- 默认迭代次数改为 10 次
+- 添加服务器运行时间显示（Up: 2d 3h）
+
+---
+
 ## v1.6.0 (2026-05-07)
 
 📊 **dbtop 显示重构（参考 pg_top）**
@@ -357,6 +625,10 @@ pip install -e .
 
 | Version | Date | Description |
 |---------|------|-------------|
+| v1.9.1 | 2026-05-07 | Web 界面布局优化（控制栏整合、Banner 缩小） |
+| v1.9.0 | 2026-05-07 | Web 界面输出优化（折叠、滚动控制、返回顶部） |
+| v1.8.0 | 2026-05-07 | Web 端 dbtop 实时动态刷新（WebSocket 流式推送） |
+| v1.7.0 | 2026-05-07 | dbtop 全面升级（基于 pg_top 源码研究，速率计算、DB activity） |
 | v1.6.0 | 2026-05-07 | dbtop 显示重构（参考 pg_top，Layout 布局） |
 | v1.5.0 | 2026-05-07 | dbtop 命令优化（实时刷新、格式化显示） |
 | v1.4.0 | 2026-05-07 | 测试框架与 CI/CD |

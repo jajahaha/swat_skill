@@ -1,11 +1,23 @@
-# Core dependencies
+# Core dependencies (required for all features)
 psycopg[binary]>=3.1.0
 prompt_toolkit>=3.0.0
 rich>=13.0.0
 pyyaml>=6.0
-
-# LLM support
 anthropic>=0.18.0
 
-# Optional: OpenAI support
-# openai>=1.0.0
+# Web dependencies (optional, for web interface)
+# Install with: pip install swat_skill[web]
+# Or uncomment below:
+fastapi>=0.100.0
+uvicorn>=0.23.0
+websockets>=11.0
+jinja2>=3.1.0
+
+# Build dependencies (for creating standalone executable)
+# Install with: pip install pyinstaller
+pyinstaller>=6.0
+
+# Development dependencies (optional)
+pytest>=7.0
+pytest-cov>=4.0
+pytest-asyncio>=0.21

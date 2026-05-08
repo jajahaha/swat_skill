@@ -421,19 +421,22 @@ elif config.llm.provider == "anthropic":
 
 ## 9. 后续规划
 
-### v1.6.0 (已完成)
+### v1.6.0 ~ v1.9.4 (已完成)
 
-- dbtop 显示重构（参考 pg_top）
-- Rich Layout 分区域显示
-- Table 直接渲染（不转为字符串）
+- v1.6.0: dbtop 显示重构（参考 pg_top）、Rich Layout 分区域显示、Web 端实时刷新
+- v1.7.0: 独立可执行文件打包（PyInstaller）、Web 输出优化（折叠、滚动控制）
+- v1.8.0: Web 端 dbtop 实时动态刷新、WebSocket 流式推送
+- v1.9.0 ~ v1.9.2: Web 界面输出优化、布局优化、dbtop 紧凑显示
+- v1.9.3: 左侧边栏优化（技能搜索、数据库连接信息展示）
+- v1.9.4: 版本更新与文档同步
 
-### v1.7.0
+### v1.10.0 (规划中)
 
 - Sentinel 实时监控
 - Rule 规则引擎（确定性诊断）
 - Scheduler 定时巡检
 
-### v1.8.0
+### v2.0.0 (规划中)
 
 - MySQL 支持
 - Oracle 支持（可选）

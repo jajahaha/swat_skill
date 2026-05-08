@@ -1,4 +1,4 @@
-# swat_skill v1.6.0 - PostgreSQL Database CLI Agent
+# swat_skill v1.9.4 - PostgreSQL Database CLI Agent
 
 <p align="center">
   <pre align="center">
@@ -43,7 +43,28 @@ swat_skill 是一个专为 PostgreSQL 设计的数据库智能诊断 CLI Agent�
 
 ## 📦 安装
 
+### 方式一：独立可执行文件（无需 Python）
+
+适合部署到没有 Python 环境的生产机器。
+
 ```bash
+# 下载独立可执行版本
+# 从 Releases 页面下载 swat_skill-1.8.0-linux-x64.tar.gz
+
+# 解压
+tar -xzf swat_skill-1.8.0-linux-x64.tar.gz
+
+# 确保 PostgreSQL 客户端库已安装
+# Ubuntu/Debian: apt install libpq5
+# CentOS/RHEL: yum install postgresql-libs
+
+# 运行
+./swat_skill/run.sh setup  # 配置数据库连接
+./swat_skill/run.sh        # 启动交互式会话
+./swat_skill/run.sh web    # 启动 Web 界面
+```
+
+### 方式二：从 PyPI 安装
 # 从 PyPI 安装（即将发布）
 pip install swat_skill
 

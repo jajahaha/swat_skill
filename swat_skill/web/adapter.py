@@ -101,7 +101,7 @@ class WebFormatter:
         }
 
     def format_dbtop(self, data: List[Dict]) -> Dict:
-        """Format dbtop results for web display."""
+        """Format dbtop results for web display - pg_top style."""
         if not data:
             return {"type": "info", "message": "No data collected"}
 
@@ -111,12 +111,22 @@ class WebFormatter:
         return {
             "type": "dbtop",
             "timestamp": latest.get("timestamp", ""),
-            "summary": {
-                "active_sessions": latest.get("active_sessions", 0),
-                "connections": f"{latest.get('current_connections', 0)}/{latest.get('max_connections', 0)}",
-                "cache_hit_ratio": latest.get("cache_hit_ratio", 0),
-                "xact_commit": latest.get("xact_commit", 0),
-                "xact_rollback": latest.get("xact_rollback", 0),
+            "uptime": latest.get("uptime", ""),
+            # DB activity rates (pg_top style)
+            "db_activity": {
+                "tps": latest.get("tps", 0),
+                "rollbacks_ps": latest.get("rollbacks_ps", 0),
+                "buffer_reads_ps": latest.get("buffer_reads_ps", 0),
+                "buffer_hit_pct": latest.get("buffer_hit_pct", 0),
+                "row_reads_ps": latest.get("row_reads_ps", 0),
+                "row_writes_ps": latest.get("row_writes_ps", 0),
+            },
+            # Session states breakdown
+            "session_states": {
+                "total": latest.get("sessions_total", 0),
+                "active": latest.get("sessions_active", 0),
+                "idle": latest.get("sessions_idle", 0),
+                "idle_tx": latest.get("sessions_idle_tx", 0),
             },
             "sessions": latest.get("sessions_table", []),
             "wait_events": latest.get("wait_events_table", []),

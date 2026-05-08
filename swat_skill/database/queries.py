@@ -321,6 +321,57 @@ QUERIES = {
         WHERE datname = current_database()
     """,
 
+    # Database-wide stats for rate calculations (like pg_top)
+    "db_stats_cumulative": """
+        SELECT
+            sum(xact_commit) as xact_commit,
+            sum(xact_rollback) as xact_rollback,
+            sum(blks_read) as blks_read,
+            sum(blks_hit) as blks_hit,
+            sum(tup_returned) as tup_returned,
+            sum(tup_fetched) as tup_fetched,
+            sum(tup_inserted) as tup_inserted,
+            sum(tup_updated) as tup_updated,
+            sum(tup_deleted) as tup_deleted,
+            sum(conflicts) as conflicts,
+            sum(deadlocks) as deadlocks,
+            count(*) as num_db
+        FROM pg_stat_database
+        WHERE datname != 'template0' AND datname != 'template1'
+    """,
+
+    # All sessions with state breakdown for process states display
+    "sessions_with_state": """
+        SELECT pid, usename, application_name, client_addr, state,
+               query_start, state_change, wait_event_type, wait_event,
+               substring(query, 1, 200) as query_preview,
+               EXTRACT(EPOCH FROM (now() - query_start)) as duration_seconds,
+               EXTRACT(EPOCH FROM (now() - xact_start)) as xact_duration_seconds
+        FROM pg_stat_activity
+        WHERE datname = current_database()
+        ORDER BY
+            CASE WHEN state = 'active' THEN 0
+                 WHEN state = 'idle in transaction' THEN 1
+                 WHEN state = 'idle' THEN 2
+                 ELSE 3 END,
+            query_start DESC NULLS LAST
+        LIMIT 50
+    """,
+
+    # Session state counts (for pg_top style process states)
+    "session_state_counts": """
+        SELECT
+            count(*) FILTER (WHERE state = 'active') as active,
+            count(*) FILTER (WHERE state = 'idle') as idle,
+            count(*) FILTER (WHERE state = 'idle in transaction') as idle_in_transaction,
+            count(*) FILTER (WHERE state = 'idle in transaction aborted') as idle_in_transaction_aborted,
+            count(*) FILTER (WHERE state = 'fastpath function call') as fastpath,
+            count(*) FILTER (WHERE state = 'disabled') as disabled,
+            count(*) as total
+        FROM pg_stat_activity
+        WHERE datname = current_database()
+    """,
+
     "shared_buffers_usage": """
         SELECT datname,
                blks_read, blks_hit,

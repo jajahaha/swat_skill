@@ -6,6 +6,19 @@ Provides the main interactive loop for swat_skill.
 import sys
 import os
 
+# Handle both package import and standalone execution
+if __name__ == "__main__" and not __package__:
+    # Running as standalone script (PyInstaller bundled)
+    # Add parent directory to path for imports
+    import importlib.util
+    import pathlib
+
+    # When running from PyInstaller, modules are in _internal
+    if getattr(sys, 'frozen', False):
+        # PyInstaller bundle
+        bundle_dir = sys._MEIPASS
+        sys.path.insert(0, bundle_dir)
+
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -42,14 +55,24 @@ def _get_imports():
     }
 
 
-# For package import
-from .config import Config, load_config, save_config
-from .database.connection import ConnectionManager, create_connection_manager
-from .database.queries import SQL_KEYWORDS
-from .dispatcher.router import Dispatcher
-from .llm.agent import LLMAgent, create_llm_agent
-from .skills.base import SkillResult, SkillRegistry
-from .utils.formatter import Formatter, get_formatter
+# Import for package usage
+try:
+    from .config import Config, load_config, save_config
+    from .database.connection import ConnectionManager, create_connection_manager
+    from .database.queries import SQL_KEYWORDS
+    from .dispatcher.router import Dispatcher
+    from .llm.agent import LLMAgent, create_llm_agent
+    from .skills.base import SkillResult, SkillRegistry
+    from .utils.formatter import Formatter, get_formatter
+except ImportError:
+    # Fallback for standalone execution
+    from swat_skill.config import Config, load_config, save_config
+    from swat_skill.database.connection import ConnectionManager, create_connection_manager
+    from swat_skill.database.queries import SQL_KEYWORDS
+    from swat_skill.dispatcher.router import Dispatcher
+    from swat_skill.llm.agent import LLMAgent, create_llm_agent
+    from swat_skill.skills.base import SkillResult, SkillRegistry
+    from swat_skill.utils.formatter import Formatter, get_formatter
 
 
 def create_completer(dispatcher: Dispatcher) -> WordCompleter:
